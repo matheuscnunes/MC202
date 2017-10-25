@@ -8,12 +8,12 @@
  */
 
 //Enuns
-typedef enum Situacao { LIVRE, PARTICIONADO, OCUPADO };
+typedef enum Situacao { LIVRE, PARTICIONADO, OCUPADO } Situacao;
 typedef enum Operacoes {
   INICIAR_PROCESSO = 1, FINALIZAR_PROCESSO, FRAGMENTACAO, RELATORIO,
   IMPRIME_SEMENTES, IMPRIME_PROCESSOS
-};
-typedef enum bool { false, true };
+} Operacoes;
+typedef enum bool { false, true } bool;
 
 //Structs
 
