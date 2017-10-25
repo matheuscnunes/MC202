@@ -25,12 +25,19 @@ struct No {
 
 typedef struct No No;
 
+//Esqueletos
+No* initNo(int tamanho, No *pai);
+int doisElevado(unsigned int);
 
 //Funções
 
 int main() {
-	int op;
+  int expoenteMemoria;
+  scanf("%d", &expoenteMemoria);
+  int memoriaTotal = doisElevado(expoenteMemoria);
+  No *raiz = initNo(memoriaTotal, NULL);
 
+	int op;
 	// Le as operações do sistema
 	while (scanf("%d", &op) != EOF) {
 		switch (op) {
@@ -63,3 +70,19 @@ int main() {
 		}
 	}
 }
+
+No* initNo(int tamanho, No *pai) {
+  No *no = malloc(sizeof(No));
+  no->tamanho = tamanho;
+  no->dir = no->esq = NULL;
+  no->pai = pai;
+  no->estado = LIVRE;
+}
+
+// HELPERS
+int doisElevado(unsigned int exp) {
+    int i, result = 1;
+    for (i = 0; i < exp; i++)
+        result *= 2;
+    return result;
+ }
