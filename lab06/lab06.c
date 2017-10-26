@@ -18,17 +18,23 @@ typedef enum bool { false, true } bool;
 //Structs
 
 struct No {
-	int tamanhoMaximo, tamanhoDoPrograma;
+	int tamanhoMemoria;
 	int codigo;
  	struct No *dir, *esq, *pai;
- 	Situacao estado;
+ 	struct Programa p;
 };
+struct Programa {
+	int tamanho;
+	int cod;
+}
 
 typedef struct No No;
+typedef struct Programa Programa;
 
 //Esqueletos
 No* initNo(int tamanho, No *pai);
 int doisElevado(unsigned int);
+void iniciarPrograma(No *raiz, Programa *p);
 
 //Funções
 
@@ -43,7 +49,8 @@ int main() {
 	while (scanf("%d", &op) != EOF) {
 		switch (op) {
 		  case INICIAR_PROCESSO: {
-
+		  	int cod, tamanho;
+		  	scanf("%d %d", cod, tamanho);
 		    break;
 		  }
 		  case FINALIZAR_PROCESSO: {
@@ -75,10 +82,9 @@ int main() {
 No* initNo(int tamanho, No *pai) {
   No *no = malloc(sizeof(No));
   no->tamanhoMaximo = tamanho;
-  no->tamanhoDoPrograma = 0;
   no->dir = no->esq = NULL;
   no->pai = pai;
-  no->estado = LIVRE;
+  no->p = NULL;
 }
 
 // HELPERS
