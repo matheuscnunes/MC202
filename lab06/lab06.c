@@ -18,7 +18,8 @@ typedef enum bool { false, true } bool;
 //Structs
 
 struct No {
- 	int tamanho;
+	int tamanhoMaximo, tamanhoDoPrograma;
+	int codigo;
  	struct No *dir, *esq, *pai;
  	Situacao estado;
 };
@@ -73,7 +74,8 @@ int main() {
 
 No* initNo(int tamanho, No *pai) {
   No *no = malloc(sizeof(No));
-  no->tamanho = tamanho;
+  no->tamanhoMaximo = tamanho;
+  no->tamanhoDoPrograma = 0;
   no->dir = no->esq = NULL;
   no->pai = pai;
   no->estado = LIVRE;
