@@ -32,12 +32,14 @@ typedef struct Programa Programa;
 
 //Esqueletos
 No* initNo(int espacoMemoria, No *pai);
-Programa* initPrograma(int tamanho, int cod);
+Programa initPrograma(int tamanho, int cod);
 int doisElevado(unsigned exp);
-void finalizarProcesso(No *raiz, int cod);
-void imprimirProcessosPreOrdem(No *no, char* estados);
-bool iniciarPrograma(No *no, Programa *p);
+bool finalizarProcesso(No *no, int cod);
+bool iniciarPrograma(No *no, Programa p);
 char estadoDoNo(No *no);
+void imprimirProcessosPreOrdem(No *no);
+void imprimirProcessosPosOrdem(No *no);
+void imprimirProcessosInOrdem(No *no);
 
 int main() {
 	int expoenteMemoria;
@@ -98,19 +100,20 @@ int main() {
 		  case INICIAR_PROCESSO: {
 		  	int cod, tamanho;
 		  	scanf("%d %d", &cod, &tamanho);
-		  	Programa *p = initPrograma(tamanho, cod);
+		  	Programa p = initPrograma(tamanho, cod);
 		  	bool conseguiuIniciarPrograma = iniciarPrograma(raiz, p);
 		  	if(conseguiuIniciarPrograma)
 		  		printf("INICIOU PORRAAAA\n");
 		  	else
 		  		printf("NEM ROLOU HEIN\n");
-		  	imprimirProcessosPreOrdem(raiz, estados);
+		  	imprimirProcessosPreOrdem(raiz);
+		  	printf("\n");
 		    break;
 		  }
 		  case FINALIZAR_PROCESSO: {
 		  	int cod;
 		  	scanf("%d", &cod);
-		  	// finalizarProcesso(&(*raiz), cod);
+		  	finalizarProcesso(&(*raiz), cod);
 		    break;
 		  }
 		  case FRAGMENTACAO: {
@@ -122,8 +125,14 @@ int main() {
 		  }
 		  case IMPRIME_SEMENTES: {
 
+		  	printf("Sim = ");
+		  	imprimirProcessosInOrdem(raiz);
+		  	printf("\n");
 		  	printf("Pre = ");
-		  	imprimirProcessosPreOrdem(raiz, estados);
+		  	imprimirProcessosPreOrdem(raiz);
+		  	printf("\n");
+		  	printf("Pos = ");
+		  	imprimirProcessosPosOrdem(raiz);
 		  	printf("\n");
 		    break;
 		  }
@@ -150,25 +159,26 @@ No* initNo(int espacoMemoria, No *pai) {
   return no;
 }
 
-Programa* initPrograma(int tamanho, int cod) {
-	Programa *p = malloc(sizeof(Programa));
-	p->tamanho = tamanho;
-	p->codigo = cod;
+Programa initPrograma(int tamanho, int cod) {
+	Programa p;
+	p.tamanho = tamanho;
+	p.codigo = cod;
 	return p;
 }
 
 
-bool iniciarPrograma(No *no, Programa *p) {
-	if(p->tamanho > no->tamanhoMemoria)
+bool iniciarPrograma(No *no, Programa p) {
+	if(p.tamanho > no->tamanhoMemoria)
 		return false;
 	bool estaOcupado = no->p != NULL;
 	if(estaOcupado)
 		return false;
 	bool estaParticionado = no->dir != NULL && no->esq != NULL;
-	if(p->tamanho <= no->tamanhoMemoria) {
+	if(p.tamanho <= no->tamanhoMemoria) {
 		if(estaParticionado == false) {
-			if(p->tamanho > no->tamanhoMemoria/2) {
-				no->p = p;
+			if(p.tamanho > no->tamanhoMemoria/2) {
+				no->p = malloc(sizeof(Programa));
+				*(no->p) = p;
 				return true;
 			} else {
 				no->dir = initNo(no->tamanhoMemoria/2, no);
@@ -187,41 +197,29 @@ bool iniciarPrograma(No *no, Programa *p) {
 /*
  * Função para finalizar um processo com código cod
  */
-void finalizarProcesso(No *no, int cod) {
-	// if (no != NULL && no->esq == NULL && no->dir == NULL) {
-	// 	if (no->codigo == cod && no->estado == OCUPADO) {
-	// 		no->estado = LIVRE;
-	// 		no->tamanhoUtilizado = 0;
-	// 		no->codigo = 0;
-	// 	}
-	// } else {
-	// 	finalizarProcesso(&(*no->esq), cod);
-	// 	finalizarProcesso(&(*no->dir), cod);
-	// 	if (no->esq->estado == LIVRE && no->dir->estado == LIVRE) {
-	// 		free(no->esq);
-	// 		free(no->dir);
-	// 		no->dir = NULL;
-	// 		no->esq = NULL;
-	// 		no->estado = LIVRE;
-	// 	}
-	// }
-}
-
-/*
- * Função para imprimir processos pre-ordem
- */
-void imprimirProcessosPreOrdem(No *no, char* estados) {
-	if (no != NULL) {
-		char estado = estadoDoNo(no);
-		printf("(%c:", estado);
-		if (estado == OCUPADO) {
-			printf("%d/%d[%d])", no->p->tamanho, no->tamanhoMemoria, no->p->codigo);
-		} else {
-			printf("%d)", no->tamanhoMemoria);
+bool finalizarProcesso(No *no, int cod) {
+	char estado = estadoDoNo(no);
+	if (estado == OCUPADO) {
+		if (no->p->codigo == cod) {
+			free(no->p);
+			no->p = NULL;
+			return true;
 		}
-		imprimirProcessosPreOrdem(no->esq, estados);
-		imprimirProcessosPreOrdem(no->dir, estados);
+	} else if(estado == PARTICIONADO) {
+		bool finalizouPrograma = finalizarProcesso(no->esq, cod);
+		if(finalizouPrograma == false)
+			finalizouPrograma = finalizarProcesso(no->dir, cod);
+		bool filhosNaoEstaoParticionados = estadoDoNo(no->esq) != PARTICIONADO && estadoDoNo(no->dir) != PARTICIONADO;
+		bool filhosEstaoLivres = no->esq->p == NULL && no->dir->p == NULL;
+		if (filhosNaoEstaoParticionados && filhosEstaoLivres) {
+			free(no->esq);
+			free(no->dir);
+			no->dir = NULL;
+			no->esq = NULL;
+		}
+		return finalizouPrograma;
 	}
+	return false;
 }
 
 char estadoDoNo(No *no) {
@@ -230,6 +228,57 @@ char estadoDoNo(No *no) {
 	if(no->esq != NULL && no->dir != NULL)
 		return PARTICIONADO;
 	return LIVRE;
+}
+
+/*
+ * Função para imprimir processos pre-ordem
+ */
+void imprimirProcessosPreOrdem(No *no) {
+	if (no != NULL) {
+		char estado = estadoDoNo(no);
+		printf("(%c:", estado);
+		if (estado == OCUPADO) {
+			printf("%d/%d[%d])", no->p->tamanho, no->tamanhoMemoria, no->p->codigo);
+		} else {
+			printf("%d)", no->tamanhoMemoria);
+		}
+		imprimirProcessosPreOrdem(no->esq);
+		imprimirProcessosPreOrdem(no->dir);
+	}
+}
+
+/*
+ * Função para imprimir processos pos-ordem
+ */
+void imprimirProcessosPosOrdem(No *no) {
+	char estado = estadoDoNo(no);
+	if (estado == PARTICIONADO) {
+		imprimirProcessosPosOrdem(no->esq);
+		imprimirProcessosPosOrdem(no->dir);
+	}
+	printf("(%c:", estado);
+	if (estado == OCUPADO) {
+		printf("%d/%d[%d])", no->p->tamanho, no->tamanhoMemoria, no->p->codigo);
+	} else {
+		printf("%d)", no->tamanhoMemoria);
+	}
+}
+
+/*
+ * Função para imprimir processos in-ordem
+ */
+void imprimirProcessosInOrdem(No *no) {
+	if (no != NULL) {
+		imprimirProcessosInOrdem(no->esq);
+		char estado = estadoDoNo(no);
+		printf("(%c:", estado);
+		if (estado == OCUPADO) {
+			printf("%d/%d[%d])", no->p->tamanho, no->tamanhoMemoria, no->p->codigo);
+		} else {
+			printf("%d)", no->tamanhoMemoria);
+		}
+		imprimirProcessosInOrdem(no->dir);
+	}
 }
 
 // HELPERS
