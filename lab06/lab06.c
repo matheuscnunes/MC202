@@ -38,6 +38,8 @@ No* initNo(int tamanho, No *pai);
 int doisElevado(unsigned exp);
 void finalizarProcesso(No *raiz, int cod);
 void imprimirProcessosPreOrdem(No *no, char* estados);
+void imprimirProcessosPosOrdem(No *no, char* estados);
+void imprimirProcessosInOrdem(No *no, char* estados);
 // void iniciarPrograma(No *raiz, Programa *p);
 
 int main() {
@@ -59,10 +61,10 @@ int main() {
 	n1->codigo = 1;
 
 	No *n2 = malloc(sizeof(No));
-	n2->estado = LIVRE;
+	n2->estado = OCUPADO;
 	n2->pai = n1;
 	n2->tamanhoMemoria = n2->pai->tamanhoMemoria/2;
-	n2->tamanhoUtilizado = 0;
+	n2->tamanhoUtilizado = 4;
 	n2->codigo = 2;
 
 	No *n3 = malloc(sizeof(No));
@@ -116,8 +118,14 @@ int main() {
 		  }
 		  case IMPRIME_SEMENTES: {
 
+		  	printf("Sim = ");
+		  	imprimirProcessosInOrdem(raiz, estados);
+		  	printf("\n");
 		  	printf("Pre = ");
 		  	imprimirProcessosPreOrdem(raiz, estados);
+		  	printf("\n");
+		  	printf("Pos = ");
+		  	imprimirProcessosPosOrdem(raiz, estados);
 		  	printf("\n");
 		    break;
 		  }
@@ -180,6 +188,39 @@ void imprimirProcessosPreOrdem(No *no, char* estados) {
 		}
 		imprimirProcessosPreOrdem(no->esq, estados);
 		imprimirProcessosPreOrdem(no->dir, estados);
+	}
+}
+
+/*
+ * Função para imprimir processos pos-ordem
+ */
+void imprimirProcessosPosOrdem(No *no, char* estados) {
+	if (no != NULL) {
+		imprimirProcessosPosOrdem(no->esq, estados);
+		imprimirProcessosPosOrdem(no->dir, estados);
+
+		printf("(%c:", estados[no->estado]);
+		if (no->estado == OCUPADO) {
+			printf("%d/%d[%d])", no->tamanhoUtilizado, no->tamanhoMemoria, no->codigo);
+		} else {
+			printf("%d)", no->tamanhoMemoria);
+		}
+	}
+}
+
+/*
+ * Função para imprimir processos in-ordem
+ */
+void imprimirProcessosInOrdem(No *no, char* estados) {
+	if (no != NULL) {
+		imprimirProcessosInOrdem(no->esq, estados);
+		printf("(%c:", estados[no->estado]);
+		if (no->estado == OCUPADO) {
+			printf("%d/%d[%d])", no->tamanhoUtilizado, no->tamanhoMemoria, no->codigo);
+		} else {
+			printf("%d)", no->tamanhoMemoria);
+		}
+		imprimirProcessosInOrdem(no->dir, estados);
 	}
 }
 
