@@ -40,6 +40,7 @@ char estadoDoNo(No *no);
 void imprimirProcessosPreOrdem(No *no);
 void imprimirProcessosPosOrdem(No *no);
 void imprimirProcessosInOrdem(No *no);
+int memoriaFragmentada(No *no);
 
 int main() {
 	int expoenteMemoria;
@@ -117,6 +118,8 @@ int main() {
 		    break;
 		  }
 		  case FRAGMENTACAO: {
+		  	int fragmentacao = memoriaFragmentada(raiz);
+		  	printf("%d\n", fragmentacao);
 		    break;
 		  }
 		  case RELATORIO: {
@@ -279,6 +282,15 @@ void imprimirProcessosInOrdem(No *no) {
 		}
 		imprimirProcessosInOrdem(no->dir);
 	}
+}
+
+int memoriaFragmentada(No *no) {
+	char estado = estadoDoNo(no);
+	if(estado == LIVRE)
+		return 0;
+	if(estado == OCUPADO)
+		return no->tamanhoMemoria - no->p->tamanho;
+	return memoriaFragmentada(no->esq) + memoriaFragmentada(no->dir);
 }
 
 // HELPERS
