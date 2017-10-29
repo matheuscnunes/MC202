@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 /*
  * Nomes: Matheus Cezar Nunes , Mateus Freitas Silveira
@@ -43,7 +44,7 @@ void imprimirProcessosPosOrdem(No *no);
 void imprimirProcessosInOrdem(No *no);
 int memoriaFragmentada(No *no);
 void relatorioDoSistema(No *no, int *ocupados, int *livres, int *particionados, int *memoriaUsada);
-void imprimirProcessosAlocados(No *no);
+void imprimirProcessosAlocados(No *no, bool *encontrouPrograma);
 
 int main() {
 	int expoenteMemoria;
@@ -86,16 +87,20 @@ int main() {
 		  	int *livres = malloc(sizeof(int));
 		  	int *memoriaUsada = malloc(sizeof(int));
 		  	int *particionados = malloc(sizeof(int));
+		  	*ocupados = *livres = *memoriaUsada = *particionados = 0; 
 		  	relatorioDoSistema(raiz, ocupados, livres, particionados, memoriaUsada);
 		  	float mem = *memoriaUsada;
 		  	float percentual = mem / memoriaTotal * 100;
+		  	double res = floor(percentual);
+		  	printf("[RELATORIO DE SISTEMA]\n");
 		  	printf("%d Ocupados\n", *ocupados);
 		  	printf("%d Livres\n", *livres);
 		  	printf("%d Particionados\n", *particionados);
-		  	printf("Memoria utilizada %.0f\n", percentual);
+		  	printf("Memoria utilizada = %.0lf / 100\n", res);
 		    break;
 		  }
 		  case IMPRIME_SEMENTES: {
+		  	printf("[SEMENTES GERADORAS]\n");
 		  	printf("Sim = ");
 		  	imprimirProcessosInOrdem(raiz);
 		  	printf("\n");
@@ -109,7 +114,11 @@ int main() {
 		  }
 		  case IMPRIME_PROCESSOS: {
 		  	printf("[PROCESSOS PRESENTES NA MEMORIA]\n");
-		  	imprimirProcessosAlocados(raiz);
+		  	bool encontrouPrograma = false;
+		  	imprimirProcessosAlocados(raiz, &encontrouPrograma);
+		  	if (!encontrouPrograma) {
+		  		printf("Nenhum processo presente\n");
+		  	}
 		    break;
 		  }
 		  default:
@@ -200,7 +209,7 @@ void relatorioDoSistema(No *no, int *ocupados, int *livres, int *particionados, 
 		relatorioDoSistema(no->dir, &(*ocupados), &(*livres), &(*particionados), &(*memoriaUsada));
 	} else if (estado == OCUPADO) {
 		*ocupados += 1;
-		*memoriaUsada += no->p->tamanho;		
+		*memoriaUsada += no->tamanhoMemoria;		
 	} else {
 		*livres += 1;
 	}
@@ -274,13 +283,14 @@ int memoriaFragmentada(No *no) {
 	return memoriaFragmentada(no->esq) + memoriaFragmentada(no->dir);
 }
 
-void imprimirProcessosAlocados(No *no) {
+void imprimirProcessosAlocados(No *no, bool *encontrouPrograma) {
 	char estado = estadoDoNo(no);
-	if(estado == OCUPADO)
+	if(estado == OCUPADO) {
 		printf("%d [Processo: %d]\n", no->tamanhoMemoria, no->p->codigo);
-	else if(estado == PARTICIONADO) {
-		imprimirProcessosAlocados(no->esq);
-		imprimirProcessosAlocados(no->dir);
+		*encontrouPrograma = true;
+	} else if(estado == PARTICIONADO) {
+		imprimirProcessosAlocados(no->esq, &(*encontrouPrograma));
+		imprimirProcessosAlocados(no->dir, &(*encontrouPrograma));
 	}
 }
 
