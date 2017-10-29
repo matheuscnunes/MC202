@@ -43,6 +43,7 @@ void imprimirProcessosPosOrdem(No *no);
 void imprimirProcessosInOrdem(No *no);
 int memoriaFragmentada(No *no);
 void relatorioDoSistema(No *no, int *ocupados, int *livres, int *particionados, int *memoriaUsada);
+void imprimirProcessosAlocados(No *no);
 
 int main() {
 	int expoenteMemoria;
@@ -60,11 +61,9 @@ int main() {
 		  	Programa p = initPrograma(tamanho, cod);
 		  	bool conseguiuIniciarPrograma = iniciarPrograma(raiz, p);
 		  	if(conseguiuIniciarPrograma)
-		  		printf("INICIOU PORRAAAA\n");
+		  		printf("Processo (%d) de tamanho %d inicializado com sucesso\n", cod, tamanho);
 		  	else
-		  		printf("NEM ROLOU HEIN\n");
-		  	imprimirProcessosPreOrdem(raiz);
-		  	printf("\n");
+		  		printf("Memoria insuficiente\n");
 		    break;
 		  }
 		  case FINALIZAR_PROCESSO: {
@@ -79,7 +78,7 @@ int main() {
 		  }
 		  case FRAGMENTACAO: {
 		  	int fragmentacao = memoriaFragmentada(raiz);
-		  	printf("%d\n", fragmentacao);
+		  	printf("Quantidade total de memoria desperdicada por fragmentacao: %d\n", fragmentacao);
 		    break;
 		  }
 		  case RELATORIO: {
@@ -97,7 +96,6 @@ int main() {
 		    break;
 		  }
 		  case IMPRIME_SEMENTES: {
-
 		  	printf("Sim = ");
 		  	imprimirProcessosInOrdem(raiz);
 		  	printf("\n");
@@ -110,7 +108,8 @@ int main() {
 		    break;
 		  }
 		  case IMPRIME_PROCESSOS: {
-		  	
+		  	printf("[PROCESSOS PRESENTES NA MEMORIA]\n");
+		  	imprimirProcessosAlocados(raiz);
 		    break;
 		  }
 		  default:
@@ -273,6 +272,16 @@ int memoriaFragmentada(No *no) {
 	if(estado == OCUPADO)
 		return no->tamanhoMemoria - no->p->tamanho;
 	return memoriaFragmentada(no->esq) + memoriaFragmentada(no->dir);
+}
+
+void imprimirProcessosAlocados(No *no) {
+	char estado = estadoDoNo(no);
+	if(estado == OCUPADO)
+		printf("%d [Processo: %d]\n", no->tamanhoMemoria, no->p->codigo);
+	else if(estado == PARTICIONADO) {
+		imprimirProcessosAlocados(no->esq);
+		imprimirProcessosAlocados(no->dir);
+	}
 }
 
 // HELPERS
