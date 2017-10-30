@@ -45,6 +45,7 @@ void imprimirProcessosInOrdem(No *no);
 int memoriaFragmentada(No *no);
 void relatorioDoSistema(No *no, int *ocupados, int *livres, int *particionados, int *memoriaUsada);
 void imprimirProcessosAlocados(No *no, bool *encontrouPrograma);
+void desalocaMemoria(No *no);
 
 int main() {
 	int expoenteMemoria;
@@ -97,6 +98,11 @@ int main() {
 		  	printf("%d Livres\n", *livres);
 		  	printf("%d Particionados\n", *particionados);
 		  	printf("Memoria utilizada = %.0lf / 100\n", res);
+
+		  	free(ocupados);
+		  	free(livres);
+		  	free(memoriaUsada);
+		  	free(particionados);
 		    break;
 		  }
 		  case IMPRIME_SEMENTES: {
@@ -126,6 +132,8 @@ int main() {
 		  break;
 		}
 	}
+
+	desalocaMemoria(raiz);
 }
 
 No* initNo(int espacoMemoria, No *pai) {
@@ -292,6 +300,16 @@ void imprimirProcessosAlocados(No *no, bool *encontrouPrograma) {
 		imprimirProcessosAlocados(no->esq, &(*encontrouPrograma));
 		imprimirProcessosAlocados(no->dir, &(*encontrouPrograma));
 	}
+}
+
+void desalocaMemoria(No *no) {
+	if(no != NULL) {
+		No *esq = no->esq;
+		No *dir = no->dir;
+		free(no);
+		desalocaMemoria(&(*esq));
+		desalocaMemoria(&(*dir));
+	}	
 }
 
 // HELPERS
