@@ -35,6 +35,5 @@ int main() {
 		}
 	}
 
-	free(estados);
-	// Liberar árvore completa
+	// Liberar memoria
 }
