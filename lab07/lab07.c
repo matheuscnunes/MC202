@@ -41,6 +41,8 @@ void enfileirar(FilaProgramas *f, char *nomePrograma);
 char* desenfileirar(FilaProgramas *f);
 Local ladoDoProgramaEmRelacaoDaPasta(Pasta *no, char* nomePrograma);
 bool filaVazia(FilaProgramas *f);
+void printPreOrdem(Pasta *pasta);
+void printInOrdem(Pasta *pasta);
 
 int main() {
 	int qtdProgramas;
@@ -51,16 +53,23 @@ int main() {
 	for(int i = 0; i < qtdProgramas; i++) {
 		char *nomePrograma = malloc(TAM_NOME * sizeof(char));
 		scanf("%s", nomePrograma);
+		printf("a\n");
 		enfileirar(filaInOrdem, nomePrograma);
 	}
 	//Lê pré-ordem
 	for(int i = 0; i < qtdProgramas; i++) {
 		char *nomePrograma = malloc(TAM_NOME * sizeof(char));
 		scanf("%s", nomePrograma);
+		printf("b\n");
 		enfileirar(filaPreOrdem, nomePrograma);
 	}
-
 	Pasta *raiz = recriaArvore(filaPreOrdem, filaInOrdem, RAIZ);
+	free(filaPreOrdem); free(filaInOrdem);
+
+	printPreOrdem(raiz);
+	printf("\n");
+	printInOrdem(raiz);
+	printf("\n");
 
 	int op;
 	// Le as operações do sistema
@@ -83,6 +92,22 @@ Pasta* criaPasta(char *nomePrograma, Local lado) {
 	novaPasta->dir = novaPasta->esq = NULL;
 
 	return novaPasta;
+}
+
+void printPreOrdem(Pasta *pasta) {
+	if (pasta != NULL) {
+		printf("%s", pasta->nomePrograma);
+		printPreOrdem(pasta->esq);
+		printPreOrdem(pasta->dir);
+	}
+}
+
+void printInOrdem(Pasta *pasta) {
+	if (pasta != NULL) {
+		printInOrdem(pasta->esq);
+		printf("%s", pasta->nomePrograma);
+		printInOrdem(pasta->dir);
+	}
 }
 
 char* geraNomeDaPasta(char *nomeBase, Local lado) {
@@ -112,10 +137,10 @@ Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Local ladoA
 		enfileirar(arvoreEsqInOrdem, nomePrograma);
 		nomePrograma = desenfileirar(inOrdem);
 	}
-	FilaProgramas *arvDirInOrdem = inOrdem; //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
+	FilaProgramas *arvoreDirInOrdem = inOrdem; //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
 	Pasta *p = criaPasta(programaMae, ladoAtual);
 	p->esq = recriaArvore(preOrdem, arvoreEsqInOrdem, ESQUERDA);
-	p->dir = recriaArvore(preOrdem, arvDirInOrdem, DIREITA);
+	p->dir = recriaArvore(preOrdem, arvoreDirInOrdem, DIREITA);
 	return p;
 }
 
@@ -126,8 +151,8 @@ FilaProgramas* criaFila() {
 }
 
 void enfileirar(FilaProgramas *f, char *nomePrograma) {
-	f->fim += 1;
 	f->programas[f->fim] = nomePrograma;
+	f->fim += 1;
 }
 
 char* desenfileirar(FilaProgramas *f) {
@@ -139,6 +164,8 @@ char* desenfileirar(FilaProgramas *f) {
 }
 
 bool filaVazia(FilaProgramas *f) {
+	if (f == NULL)
+		return true;
 	return f->fim == f->inicio;
 }
 
@@ -150,5 +177,3 @@ Local ladoDoProgramaEmRelacaoDaPasta(Pasta *no, char* nomePrograma) {
 	else
 		return DIREITA;
 }
-
-
