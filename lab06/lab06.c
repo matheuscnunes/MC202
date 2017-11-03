@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 /*
  * Nomes: Matheus Cezar Nunes , Mateus Freitas Silveira
@@ -18,6 +19,7 @@ typedef enum bool { false, true } bool;
 //Structs
 struct No {
 	int tamanhoMemoria;
+	Situacao estado;
  	struct No *dir, *esq, *pai;
  	struct Programa *p;
 };
@@ -41,58 +43,15 @@ void imprimirProcessosPreOrdem(No *no);
 void imprimirProcessosPosOrdem(No *no);
 void imprimirProcessosInOrdem(No *no);
 int memoriaFragmentada(No *no);
+void relatorioDoSistema(No *no, int *ocupados, int *livres, int *particionados, int *memoriaUsada);
+void imprimirProcessosAlocados(No *no, bool *encontrouPrograma);
+void desalocaMemoria(No *no);
 
 int main() {
 	int expoenteMemoria;
 	scanf("%d", &expoenteMemoria);
 	int memoriaTotal = doisElevado(expoenteMemoria);
 	No *raiz = initNo(memoriaTotal, NULL);
-
-	// INICIO DO PROCESSO DE POPULAÇÃO DA ARVORE
-	// raiz->estado = PARTICIONADO;
-	// raiz->tamanhoUtilizado = 0;
-	// raiz->codigo = 9;
-
-	// No *n1 = (No*) malloc(sizeof(No));
-	// n1->pai = raiz;
-	// n1->estado = PARTICIONADO;
-	// n1->tamanhoMemoria = n1->pai->tamanhoMemoria/2;
-	// n1->tamanhoUtilizado = 0;;
-	// n1->codigo = 1;
-
-	// No *n2 = malloc(sizeof(No));
-	// n2->estado = LIVRE;
-	// n2->pai = n1;
-	// n2->tamanhoMemoria = n2->pai->tamanhoMemoria/2;
-	// n2->tamanhoUtilizado = 0;
-	// n2->codigo = 2;
-
-	// No *n3 = malloc(sizeof(No));
-	// n3->pai = n1;
-	// n3->estado = OCUPADO;
-	// n3->tamanhoMemoria = n3->pai->tamanhoMemoria/2;
-	// n3->tamanhoUtilizado = 3;
-	// n3->codigo = 3;
-
-	// No *n4 = malloc(sizeof(No));
-	// n4->pai = raiz;
-	// n4->estado = LIVRE;
-	// n4->tamanhoMemoria = n4->pai->tamanhoMemoria/2;
-	// n4->tamanhoUtilizado = 0;
-	// n4->codigo = 4;
-
-	// raiz->esq = n1;
-	// raiz->dir = n4;
-	// n1->esq = n2;
-	// n1->dir = n3;
-
-	// FIM DO PROCESSO DE POPULAÇÃO DA ARVORE
-
-	// Vetor para facilitar impressões de estado
-	char *estados = malloc(sizeof(char));
-	estados[0] = 'L'; // Livre
-	estados[1] = 'P'; // Particionado
-	estados[2] = 'O'; // Ocupado
 
 	int op;
 	// Le as operações do sistema
@@ -104,30 +63,50 @@ int main() {
 		  	Programa p = initPrograma(tamanho, cod);
 		  	bool conseguiuIniciarPrograma = iniciarPrograma(raiz, p);
 		  	if(conseguiuIniciarPrograma)
-		  		printf("INICIOU PORRAAAA\n");
+		  		printf("Processo (%d) de tamanho %d inicializado com sucesso\n", cod, tamanho);
 		  	else
-		  		printf("NEM ROLOU HEIN\n");
-		  	imprimirProcessosPreOrdem(raiz);
-		  	printf("\n");
+		  		printf("Memoria insuficiente\n");
 		    break;
 		  }
 		  case FINALIZAR_PROCESSO: {
 		  	int cod;
 		  	scanf("%d", &cod);
-		  	finalizarProcesso(&(*raiz), cod);
+		  	if (finalizarProcesso(&(*raiz), cod)) {
+		  		printf("Processo (%d) finalizado com sucesso\n", cod);
+		  	} else {
+		  		printf("Nao existe processo de codigo %d inicializado no sistema\n", cod);
+		  	}
 		    break;
 		  }
 		  case FRAGMENTACAO: {
 		  	int fragmentacao = memoriaFragmentada(raiz);
-		  	printf("%d\n", fragmentacao);
+		  	printf("Quantidade total de memoria desperdicada por fragmentacao: %d\n", fragmentacao);
 		    break;
 		  }
 		  case RELATORIO: {
+		  	int *ocupados = malloc(sizeof(int));
+		  	int *livres = malloc(sizeof(int));
+		  	int *memoriaUsada = malloc(sizeof(int));
+		  	int *particionados = malloc(sizeof(int));
+		  	*ocupados = *livres = *memoriaUsada = *particionados = 0; 
+		  	relatorioDoSistema(raiz, ocupados, livres, particionados, memoriaUsada);
+		  	float mem = *memoriaUsada;
+		  	float percentual = mem / memoriaTotal * 100;
+		  	double res = floor(percentual);
+		  	printf("[RELATORIO DE SISTEMA]\n");
+		  	printf("%d Ocupados\n", *ocupados);
+		  	printf("%d Livres\n", *livres);
+		  	printf("%d Particionados\n", *particionados);
+		  	printf("Memoria utilizada = %.0lf / 100\n", res);
 
+		  	free(ocupados);
+		  	free(livres);
+		  	free(memoriaUsada);
+		  	free(particionados);
 		    break;
 		  }
 		  case IMPRIME_SEMENTES: {
-
+		  	printf("[SEMENTES GERADORAS]\n");
 		  	printf("Sim = ");
 		  	imprimirProcessosInOrdem(raiz);
 		  	printf("\n");
@@ -140,7 +119,12 @@ int main() {
 		    break;
 		  }
 		  case IMPRIME_PROCESSOS: {
-		  	
+		  	printf("[PROCESSOS PRESENTES NA MEMORIA]\n");
+		  	bool encontrouPrograma = false;
+		  	imprimirProcessosAlocados(raiz, &encontrouPrograma);
+		  	if (!encontrouPrograma) {
+		  		printf("Nenhum processo presente\n");
+		  	}
 		    break;
 		  }
 		  default:
@@ -149,8 +133,7 @@ int main() {
 		}
 	}
 
-	free(estados);
-	// Liberar árvore completa
+	desalocaMemoria(raiz);
 }
 
 No* initNo(int espacoMemoria, No *pai) {
@@ -209,7 +192,7 @@ bool finalizarProcesso(No *no, int cod) {
 			return true;
 		}
 	} else if(estado == PARTICIONADO) {
-		bool finalizouPrograma = finalizarProcesso(no->esq, cod);
+		int finalizouPrograma = finalizarProcesso(no->esq, cod);
 		if(finalizouPrograma == false)
 			finalizouPrograma = finalizarProcesso(no->dir, cod);
 		bool filhosNaoEstaoParticionados = estadoDoNo(no->esq) != PARTICIONADO && estadoDoNo(no->dir) != PARTICIONADO;
@@ -223,6 +206,21 @@ bool finalizarProcesso(No *no, int cod) {
 		return finalizouPrograma;
 	}
 	return false;
+}
+
+void relatorioDoSistema(No *no, int *ocupados, int *livres, int *particionados, int *memoriaUsada) {
+	char estado = estadoDoNo(no);
+	if (estado == PARTICIONADO) {
+		*particionados += 1;
+
+		relatorioDoSistema(no->esq, &(*ocupados), &(*livres), &(*particionados), &(*memoriaUsada));
+		relatorioDoSistema(no->dir, &(*ocupados), &(*livres), &(*particionados), &(*memoriaUsada));
+	} else if (estado == OCUPADO) {
+		*ocupados += 1;
+		*memoriaUsada += no->tamanhoMemoria;		
+	} else {
+		*livres += 1;
+	}
 }
 
 char estadoDoNo(No *no) {
@@ -291,6 +289,27 @@ int memoriaFragmentada(No *no) {
 	if(estado == OCUPADO)
 		return no->tamanhoMemoria - no->p->tamanho;
 	return memoriaFragmentada(no->esq) + memoriaFragmentada(no->dir);
+}
+
+void imprimirProcessosAlocados(No *no, bool *encontrouPrograma) {
+	char estado = estadoDoNo(no);
+	if(estado == OCUPADO) {
+		printf("%d [Processo: %d]\n", no->tamanhoMemoria, no->p->codigo);
+		*encontrouPrograma = true;
+	} else if(estado == PARTICIONADO) {
+		imprimirProcessosAlocados(no->esq, &(*encontrouPrograma));
+		imprimirProcessosAlocados(no->dir, &(*encontrouPrograma));
+	}
+}
+
+void desalocaMemoria(No *no) {
+	if(no != NULL) {
+		No *esq = no->esq;
+		No *dir = no->dir;
+		free(no);
+		desalocaMemoria(&(*esq));
+		desalocaMemoria(&(*dir));
+	}	
 }
 
 // HELPERS
