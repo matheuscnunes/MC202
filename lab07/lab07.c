@@ -10,7 +10,7 @@
 
 //Enuns
 typedef enum Operacoes {
-  INSERIR = 1
+  INSTALAR = 1
 } Operacoes;
 typedef enum bool { false, true } bool;
 typedef enum Local { DIREITA, ESQUERDA, RAIZ } Local;
@@ -43,6 +43,7 @@ Local ladoDoProgramaEmRelacaoDaPasta(Pasta *no, char* nomePrograma);
 bool filaVazia(FilaProgramas *f);
 void printPreOrdem(Pasta *pasta);
 void printInOrdem(Pasta *pasta);
+Pasta* instalarPrograma(Pasta *raiz, char* nomeNovoPrograma, Pasta *pastaInstalada, Local ladoAtual, Pasta *pasta);
 
 int main() {
 	int qtdProgramas;
@@ -53,36 +54,98 @@ int main() {
 	for(int i = 0; i < qtdProgramas; i++) {
 		char *nomePrograma = malloc(TAM_NOME * sizeof(char));
 		scanf("%s", nomePrograma);
-		printf("a\n");
 		enfileirar(filaInOrdem, nomePrograma);
 	}
 	//Lê pré-ordem
 	for(int i = 0; i < qtdProgramas; i++) {
 		char *nomePrograma = malloc(TAM_NOME * sizeof(char));
 		scanf("%s", nomePrograma);
-		printf("b\n");
 		enfileirar(filaPreOrdem, nomePrograma);
 	}
 	Pasta *raiz = recriaArvore(filaPreOrdem, filaInOrdem, RAIZ);
-	free(filaPreOrdem); free(filaInOrdem);
 
 	printPreOrdem(raiz);
 	printf("\n");
 	printInOrdem(raiz);
 	printf("\n");
 
+	//free(filaPreOrdem);
+	//free(filaInOrdem);
+
 	int op;
 	// Le as operações do sistema
 	while (scanf("%d", &op) != EOF) {
 		switch (op) {
-		  default:
-		    printf("Operação não cadastrada!\n");
-		  break;
+			case INSTALAR: {
+				Pasta *pastaInstalada = malloc(sizeof(Pasta));
+				char *nomeNovoPrograma = malloc(TAM_NOME * sizeof(char));
+				scanf("%s", nomeNovoPrograma);
+
+				raiz = instalarPrograma(raiz, nomeNovoPrograma, NULL, RAIZ, pastaInstalada);
+
+				printf("Adicionado com sucesso\n");
+				printf("Pasta: %s\n", pastaInstalada->nome);
+				printf("IN: ");
+				printInOrdem(raiz);
+				printf("\nPRE: ");
+				printPreOrdem(raiz);
+				printf("\n");
+
+				// free(nomeNovoPrograma);
+				break;
+			}
+			default:
+		    	printf("Operação não cadastrada!\n");
+			break;
 		}
 	}
 
 	// Liberar árvore completa
 }
+
+/**
+ * Função para instalar um novo programa que retorna a raiz
+ */
+Pasta* instalarPrograma(Pasta *raiz, char* nomeNovoPrograma, Pasta *anterior, Local ladoAtual, Pasta *pastaInstalada) {
+	if (raiz != NULL) {
+		if (strcmp(nomeNovoPrograma, raiz->nomePrograma) >= 0) {
+			raiz->dir = instalarPrograma(raiz->dir, nomeNovoPrograma, raiz, DIREITA, pastaInstalada);
+		} else {
+			raiz->esq = instalarPrograma(raiz->esq, nomeNovoPrograma, raiz, ESQUERDA, pastaInstalada);
+		}
+	} else {
+		raiz = malloc(sizeof(Pasta));
+		raiz->nome = geraNomeDaPasta(anterior->nomePrograma, ladoAtual);
+		raiz->nomePrograma = nomeNovoPrograma;
+		*pastaInstalada = *raiz;
+		return raiz;
+	}
+		return raiz;
+}
+
+/**
+ * Função para recriar uma árvore dado duas semestes geradoras
+ */
+Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Local ladoAtual) {
+	if(filaVazia(preOrdem) || filaVazia(inOrdem))
+		return NULL;
+
+	char* programaMae = desenfileirar(preOrdem);
+	FilaProgramas *arvoreEsqInOrdem = criaFila();
+	char* nomePrograma = desenfileirar(inOrdem);
+	while(nomePrograma != NULL && strcmp(programaMae, nomePrograma) != 0) {
+		enfileirar(arvoreEsqInOrdem, nomePrograma);
+		nomePrograma = desenfileirar(inOrdem);
+	}
+	FilaProgramas *arvoreDirInOrdem = inOrdem; //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
+	Pasta *p = criaPasta(programaMae, ladoAtual);
+	p->esq = recriaArvore(preOrdem, arvoreEsqInOrdem, ESQUERDA);
+	p->dir = recriaArvore(preOrdem, arvoreDirInOrdem, DIREITA);
+	return p;
+}
+
+
+// INICIALIZERS
 
 Pasta* criaPasta(char *nomePrograma, Local lado) {
 	Pasta *novaPasta = malloc(sizeof(Pasta));
@@ -92,6 +155,43 @@ Pasta* criaPasta(char *nomePrograma, Local lado) {
 	novaPasta->dir = novaPasta->esq = NULL;
 
 	return novaPasta;
+}
+
+FilaProgramas* criaFila() {
+	FilaProgramas *f = malloc(sizeof(FilaProgramas));
+	f->inicio = f->fim = 0;
+	return f;
+}
+
+
+// HELPERS
+
+void enfileirar(FilaProgramas *f, char *nomePrograma) {
+	f->programas[f->fim] = nomePrograma;
+	f->fim += 1;
+}
+
+char* desenfileirar(FilaProgramas *f) {
+	if(filaVazia(f))
+		return NULL;
+	char* primeiroDaFila = f->programas[f->inicio];
+	f->inicio += 1;
+	return primeiroDaFila;
+}
+
+bool filaVazia(FilaProgramas *f) {
+	if (f == NULL)
+		return true;
+	return f->fim == f->inicio;
+}
+
+Local ladoDoProgramaEmRelacaoDaPasta(Pasta *no, char* nomePrograma) {
+	if(no->nomePrograma == NULL)
+		return RAIZ;
+	if(strcmp(nomePrograma, no->nomePrograma) < 0)
+		return ESQUERDA;
+	else
+		return DIREITA;
 }
 
 void printPreOrdem(Pasta *pasta) {
@@ -124,56 +224,4 @@ char* geraNomeDaPasta(char *nomeBase, Local lado) {
 		strcat(nome, "_esq");
 
 	return nome;
-}
-
-Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Local ladoAtual) {
-	if(filaVazia(preOrdem) || filaVazia(inOrdem))
-		return NULL;
-
-	char* programaMae = desenfileirar(preOrdem);
-	FilaProgramas *arvoreEsqInOrdem = criaFila();
-	char* nomePrograma = desenfileirar(inOrdem);
-	while(nomePrograma != NULL && strcmp(programaMae, nomePrograma) != 0) {
-		enfileirar(arvoreEsqInOrdem, nomePrograma);
-		nomePrograma = desenfileirar(inOrdem);
-	}
-	FilaProgramas *arvoreDirInOrdem = inOrdem; //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
-	Pasta *p = criaPasta(programaMae, ladoAtual);
-	p->esq = recriaArvore(preOrdem, arvoreEsqInOrdem, ESQUERDA);
-	p->dir = recriaArvore(preOrdem, arvoreDirInOrdem, DIREITA);
-	return p;
-}
-
-FilaProgramas* criaFila() {
-	FilaProgramas *f = malloc(sizeof(FilaProgramas));
-	f->inicio = f->fim = 0;
-	return f;
-}
-
-void enfileirar(FilaProgramas *f, char *nomePrograma) {
-	f->programas[f->fim] = nomePrograma;
-	f->fim += 1;
-}
-
-char* desenfileirar(FilaProgramas *f) {
-	if(filaVazia(f))
-		return NULL;
-	char* primeiroDaFila = f->programas[f->inicio];
-	f->inicio += 1;
-	return primeiroDaFila;
-}
-
-bool filaVazia(FilaProgramas *f) {
-	if (f == NULL)
-		return true;
-	return f->fim == f->inicio;
-}
-
-Local ladoDoProgramaEmRelacaoDaPasta(Pasta *no, char* nomePrograma) {
-	if(no->nomePrograma == NULL)
-		return RAIZ;
-	if(strcmp(nomePrograma, no->nomePrograma) < 0)
-		return ESQUERDA;
-	else
-		return DIREITA;
 }
