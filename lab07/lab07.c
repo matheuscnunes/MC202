@@ -44,6 +44,9 @@ bool filaVazia(FilaProgramas *f);
 void printPreOrdem(Pasta *pasta);
 void printInOrdem(Pasta *pasta);
 Pasta* instalarPrograma(Pasta *raiz, char* nomeNovoPrograma, Pasta *pastaInstalada, Local ladoAtual, Pasta **pasta);
+Pasta* encontraMaximo(Pasta *arvore);
+Pasta* desinstalarPrograma(Pasta *raiz, char* nomeRemover);
+void transfereProgramas(Pasta *p1, Pasta *p2);
 
 int main() {
 	int qtdProgramas;
@@ -90,6 +93,11 @@ int main() {
 
 				break;
 			}
+      case DESINSTALAR: {
+        char *nomeNovoPrograma = malloc(TAM_NOME * sizeof(char));
+				scanf("%s", nomeNovoPrograma);
+
+      }
 			default:
 		    	printf("Operação não cadastrada!\n");
 			break;
@@ -117,6 +125,22 @@ Pasta* instalarPrograma(Pasta *no, char* nomeNovoPrograma, Pasta *anterior, Loca
 		return no;
 	}
 		return no;
+}
+
+Pasta* desinstalarPrograma(Pasta *raiz, char* nomeRemover) {
+  if(raiz == NULL)
+    return NULL;
+  if(strcmp(raiz->nomePrograma, nomeRemover) == 0) {
+    if(raiz->esq == NULL || raiz->dir == NULL) {
+      return NULL;
+    } else {
+      Pasta* extremaDireita = encontraMaximo(raiz->esq);
+      transfereProgramas(raiz, extremaDireita);
+    }
+  }
+  raiz->esq = desinstalarPrograma(raiz->esq, nomeRemover);
+  raiz->dir = desinstalarPrograma(raiz->dir, nomeRemover);
+  return raiz;
 }
 
 /**
@@ -219,4 +243,17 @@ char* geraNomeDaPasta(char *nomeBase, Local lado) {
 		strcat(nome, "_esq");
 
 	return nome;
+}
+
+Pasta* encontraMaximo(Pasta *arvore) {
+  if(arvore->dir == NULL)
+    return arvore;
+  else
+    return encontraMaximo(arvore->dir);
+}
+
+void transfereProgramas(Pasta *p1, Pasta *p2) {
+  char* programaPasta2 = p2->nomePrograma;
+  p2->nomePrograma = p1->nomePrograma;
+  p1->nomePrograma = programaPasta2;
 }
