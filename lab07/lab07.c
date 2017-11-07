@@ -26,7 +26,7 @@ struct Pasta {
 
 struct FilaProgramas {
 	int inicio, fim;
-	char* programas[];
+	char** programas;
 };
 
 typedef struct Pasta Pasta;
@@ -36,13 +36,16 @@ typedef struct FilaProgramas FilaProgramas;
 Pasta* criaPasta(char *nomePrograma, Local lado);
 char* geraNomeDaPasta(char *nomeBase, Local lado);
 Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Local ladoAtual);
-FilaProgramas* criaFila();
+FilaProgramas* criaFila(int qtd);
 void enfileirar(FilaProgramas *f, char *nomePrograma);
 char* desenfileirar(FilaProgramas *f);
 Local ladoDoProgramaEmRelacaoDaPasta(Pasta *no, char* nomePrograma);
 bool filaVazia(FilaProgramas *f);
 void printPreOrdem(Pasta *pasta);
 void printInOrdem(Pasta *pasta);
+int contaPastas(Pasta *pasta);
+void backupPreOrdem(Pasta *pasta, FilaProgramas *pre);
+void backupInOrdem(Pasta *pasta, FilaProgramas *in);
 Pasta* instalarPrograma(Pasta *raiz, char* nomeNovoPrograma, Pasta *pastaInstalada, Local ladoAtual, Pasta **pasta);
 Pasta* encontraMaximo(Pasta *arvore);
 Pasta* desinstalarPrograma(Pasta *raiz, char* nomeRemover);
@@ -51,8 +54,8 @@ void transfereProgramas(Pasta *p1, Pasta *p2);
 int main() {
 	int qtdProgramas;
 	scanf("%d", &qtdProgramas);
-	FilaProgramas *filaPreOrdem = criaFila();
-	FilaProgramas *filaInOrdem = criaFila();
+	FilaProgramas *filaPreOrdem = criaFila(qtdProgramas);
+	FilaProgramas *filaInOrdem = criaFila(qtdProgramas);
 	//Lê in-ordem
 	for(int i = 0; i < qtdProgramas; i++) {
 		char *nomePrograma = malloc(TAM_NOME * sizeof(char));
@@ -94,10 +97,27 @@ int main() {
 				break;
 			}
       case DESINSTALAR: {
-        char *nomeNovoPrograma = malloc(TAM_NOME * sizeof(char));
-				scanf("%s", nomeNovoPrograma);
-
+        char *nomeProgramaRemover = malloc(TAM_NOME * sizeof(char));
+				scanf("%s", nomeProgramaRemover);
+        desinstalarPrograma(raiz, nomeProgramaRemover);
       }
+			case BACKUP: {
+
+				free(filaPreOrdem);
+				free(filaInOrdem);
+
+				int quantidadeDePastas = contaPastas(raiz);
+				FilaProgramas *in = criaFila(quantidadeDePastas);
+				FilaProgramas *pre = criaFila(quantidadeDePastas);
+
+				backupInOrdem(raiz, in);
+				backupInOrdem(raiz, pre);
+
+				filaPreOrdem = pre;
+				filaInOrdem = in;
+				printf("[BACKUP] Configuracao atual do sistema salva com sucesso\n");
+				break;
+			}
 			default:
 		    	printf("Operação não cadastrada!\n");
 			break;
@@ -105,6 +125,22 @@ int main() {
 	}
 
 	// Liberar árvore completa
+}
+
+void backupInOrdem(Pasta *pasta, FilaProgramas *in) {
+	if (pasta != NULL){
+		backupInOrdem(pasta->esq, in);
+		enfileirar(in, pasta->nomePrograma);
+		backupInOrdem(pasta->dir, in);
+	}
+}
+
+void backupPreOrdem(Pasta *pasta, FilaProgramas *pre) {
+	if (pasta != NULL){
+		enfileirar(pre, pasta->nomePrograma);
+		backupInOrdem(pasta->esq, pre);
+		backupInOrdem(pasta->dir, pre);
+	}
 }
 
 /**
@@ -151,7 +187,7 @@ Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Local ladoA
 		return NULL;
 
 	char* programaMae = desenfileirar(preOrdem);
-	FilaProgramas *arvoreEsqInOrdem = criaFila();
+	FilaProgramas *arvoreEsqInOrdem = criaFila((inOrdem->fim - inOrdem->inicio) / 2);
 	char* nomePrograma = desenfileirar(inOrdem);
 	while (nomePrograma != NULL && strcmp(programaMae, nomePrograma) != 0) {
 		enfileirar(arvoreEsqInOrdem, nomePrograma);
@@ -176,14 +212,23 @@ Pasta* criaPasta(char *nomePrograma, Local lado) {
 	return novaPasta;
 }
 
-FilaProgramas* criaFila() {
+FilaProgramas* criaFila(int qtd) {
 	FilaProgramas *f = malloc(sizeof(FilaProgramas));
+	f->programas = malloc(qtd * sizeof(char*));
 	f->inicio = f->fim = 0;
 	return f;
 }
 
 
 // HELPERS
+
+int contaPastas(Pasta *pasta) {
+	if (pasta != NULL) {
+		return contaPastas(pasta->esq) + contaPastas(pasta->dir) + 1;
+	} else {
+		return 0;
+	}
+}
 
 void enfileirar(FilaProgramas *f, char *nomePrograma) {
 	f->programas[f->fim] = nomePrograma;
