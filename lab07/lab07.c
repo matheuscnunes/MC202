@@ -83,7 +83,7 @@ int main() {
 		switch (op) {
 			case INSTALAR: {
 				Pasta **pastaInstalada = malloc(sizeof(Pasta*));
-				char *nomeNovoPrograma = malloc(TAM_NOME * sizeof(char));
+				char *nomeNovoPrograma = (char*) malloc(TAM_NOME * sizeof(char));
 				scanf("%s", nomeNovoPrograma);
 
 				raiz = instalarPrograma(raiz, nomeNovoPrograma, NULL, RAIZ, pastaInstalada);
@@ -129,7 +129,7 @@ int main() {
       case RESTAURAR: {
         desalocarArvore(raiz);
         raiz = recriaArvore(*filaPreOrdem, *filaInOrdem, NULL);
-        printf("[RESTORE] Sistema restaurado para a versao do backup");
+        printf("[RESTORE] Sistema restaurado para a versao do backup\n");
         break;
       }
 			default:
@@ -164,6 +164,8 @@ void desalocarArvore(Pasta* raiz) {
   desalocarArvore(raiz->dir);
   free(raiz->nome);
   // free(raiz->nomePrograma);
+  raiz->nome = NULL;
+  raiz->nomePrograma = NULL;
   raiz->esq = raiz->dir = NULL;
   free(raiz);
 }
@@ -183,7 +185,6 @@ Pasta* instalarPrograma(Pasta *no, char* nomeNovoPrograma, Pasta *anterior, Loca
 		no->nome = geraNomeDaPasta(anterior, ladoAtual);
 		no->nomePrograma = nomeNovoPrograma;
 		*pastaInstalada = no;
-		return no;
 	}
 		return no;
 }
@@ -313,10 +314,10 @@ char* geraNomeDaPasta(Pasta *pastaMae, Local lado) {
 	char *nome = malloc((TAM_NOME) * sizeof(char));
 	nome[0] = '\0';
 	if(lado == RAIZ || pastaMae == NULL) {
-		strcat(nome, "raiz");
+		strcpy(nome, "raiz");
 		return nome;
 	}
-	strcat(nome, pastaMae->nomePrograma);
+	strcpy(nome, pastaMae->nomePrograma);
 	if(lado == DIREITA)
 		strcat(nome, "_dir");
 	else if(lado == ESQUERDA)
