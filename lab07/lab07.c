@@ -48,7 +48,7 @@ void backupPreOrdem(Pasta *pasta, FilaProgramas *pre);
 void backupInOrdem(Pasta *pasta, FilaProgramas *in);
 Pasta* instalarPrograma(Pasta *raiz, char* nomeNovoPrograma, Pasta *pastaInstalada, Local ladoAtual, Pasta **pasta);
 Pasta* encontraMaximo(Pasta *arvore);
-Pasta* desinstalarPrograma(Pasta *raiz, char* nomeRemover);
+Pasta* desinstalarPrograma(Pasta *raiz, char *nomeRemover, bool *removeuPrograma);
 void transfereProgramas(Pasta *p1, Pasta *p2);
 
 int main() {
@@ -99,7 +99,14 @@ int main() {
       case DESINSTALAR: {
         char *nomeProgramaRemover = malloc(TAM_NOME * sizeof(char));
 				scanf("%s", nomeProgramaRemover);
-        desinstalarPrograma(raiz, nomeProgramaRemover);
+        bool *removeuPrograma = malloc(sizeof(bool));
+        *removeuPrograma = false;
+        raiz = desinstalarPrograma(raiz, nomeProgramaRemover, removeuPrograma);
+        if (*removeuPrograma == true)
+          printf("[UNINSTALL] Programa %s.exe desinstalado com sucesso\n", nomeProgramaRemover);
+        else
+          printf("[UNINSTALL] Nao foi encontrado no sistema nenhum programa com nome %s\n", nomeProgramaRemover);
+        break;
       }
 			case BACKUP: {
 
@@ -163,10 +170,11 @@ Pasta* instalarPrograma(Pasta *no, char* nomeNovoPrograma, Pasta *anterior, Loca
 		return no;
 }
 
-Pasta* desinstalarPrograma(Pasta *raiz, char* nomeRemover) {
+Pasta* desinstalarPrograma(Pasta *raiz, char *nomeRemover, bool *removeuPrograma) {
   if(raiz == NULL)
     return NULL;
   if(strcmp(raiz->nomePrograma, nomeRemover) == 0) {
+    *removeuPrograma = true; //Se entrou aqui, é porque o programa será removido, então já posso assumir que ele foi desinstaldo
     if(raiz->esq == NULL || raiz->dir == NULL) {
       return NULL;
     } else {
