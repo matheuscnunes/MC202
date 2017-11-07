@@ -47,7 +47,7 @@ int contaPastas(Pasta *pasta);
 void backupPreOrdem(Pasta *pasta, FilaProgramas *pre);
 void backupInOrdem(Pasta *pasta, FilaProgramas *in);
 Pasta* instalarPrograma(Pasta *raiz, char* nomeNovoPrograma, Pasta *pastaInstalada, Local ladoAtual, Pasta **pasta);
-void printProgramas(Pasta *pasta, char *caminho);
+void printProgramas(Pasta *pasta, char *caminho, int tam);
 
 int main() {
 	int qtdProgramas;
@@ -112,7 +112,9 @@ int main() {
 				break;
 			}
 			case PRINT_PROGRAMAS: {
-				printProgramas(raiz, "C:");
+				char *caminho = malloc(2 * sizeof(char));
+				strcpy(caminho, "C:");
+				printProgramas(raiz, caminho, 4);
 				break;
 			}
 			default:
@@ -146,13 +148,26 @@ void backupPreOrdem(Pasta *pasta, FilaProgramas *pre) {
 	}	
 }
 
-void printProgramas(Pasta *pasta, char *caminho) {
-	printf("a");
+/**
+ * Função que printa o diretórios dos programas instalados
+ */
+void printProgramas(Pasta *pasta, char *caminho, int tam) {
 	if (pasta != NULL) {
-		printf("a");
-		printProgramas(pasta->esq, strcat(strcat(caminho, "/"), pasta->nome));
-		printf("%s/%s.exe\n", caminho, pasta->nomePrograma);
-		printProgramas(pasta->dir, strcat(strcat(caminho, "/"), pasta->nome));
+		// Cria uma variável auxiliar para ser um diretório a frente do caminho
+
+		caminho = realloc(caminho, (tam + strlen(pasta->nome) + 1) * sizeof(char));
+		char *aux = malloc((strlen(caminho) + strlen(pasta->nome) + 1) * sizeof(char));
+
+		strcpy(aux, caminho);
+		strcat(aux, "/");
+		strcat(aux, pasta->nome);
+
+		printProgramas(pasta->esq, aux, tam + strlen(pasta->nome) + 1);
+		printf("%s/%s.exe\n", aux, pasta->nomePrograma);
+		printProgramas(pasta->dir, aux, tam + strlen(pasta->nome) + 1);
+
+		// Retorna o diretório anterior para o auxiliar
+		strcpy(aux, caminho);
 	}
 }
 
