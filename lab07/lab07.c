@@ -52,6 +52,7 @@ Pasta* desinstalarPrograma(Pasta *no, Pasta *mae, char *nomeRemover, bool *remov
 void transfereProgramas(Pasta *p1, Pasta *p2);
 void desalocarArvore(Pasta* raiz);
 Local ladoDaPasta(Pasta *p);
+int tempoDeExecucao(Pasta *raiz, char* nomePrograma);
 
 int main() {
 	int qtdProgramas;
@@ -108,6 +109,19 @@ int main() {
           printf("[UNINSTALL] Programa %s.exe desinstalado com sucesso\n", nomeProgramaRemover);
         else
           printf("[UNINSTALL] Nao foi encontrado no sistema nenhum programa com nome %s\n", nomeProgramaRemover);
+        break;
+      }
+      case VELOCIDADE_RESPOSTA: {
+        char *nomeProgramaPesquisa = malloc(TAM_NOME * sizeof(char));
+        int tempo;
+				scanf("%s %d", nomeProgramaPesquisa, tempo);
+        int tempoResposta = tempoDeExecucao(raiz, nomeProgramaPesquisa);
+        int tempoRespostaSemRaiz = tempoResposta - 1;
+        if (tempo > tempoRespostaSemRaiz)
+          printf("[DELAY][OK] O acesso ao programa %s.exe foi concluido em %d segundos", nomeProgramaPesquisa, tempoRespostaSemRaiz);
+        else
+          printf("[DELAY][FAIL] O acesso ao programa %s.exe ultrapassou o limite de %d segundo", nomeProgramaPesquisa, tempo);
+        printf("%d\n", tempoResposta);
         break;
       }
 			case BACKUP: {
@@ -262,6 +276,16 @@ int contaPastas(Pasta *pasta) {
 	} else {
 		return 0;
 	}
+}
+
+int tempoDeExecucao(Pasta *raiz, char* nomePrograma) {
+  if (raiz == NULL)
+    return 0;
+  if (strcmp(raiz->nomePrograma, nomePrograma) > 0)
+    return tempoDeExecucao(raiz->esq, nomePrograma) + 1;
+  if (strcmp(raiz->nomePrograma, nomePrograma) < 0)
+    return tempoDeExecucao(raiz->dir, nomePrograma) + 1;
+  return 1;
 }
 
 void enfileirar(FilaProgramas *f, char *nomePrograma) {
