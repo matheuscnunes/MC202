@@ -33,9 +33,9 @@ typedef struct Pasta Pasta;
 typedef struct FilaProgramas FilaProgramas;
 
 //Esqueletos
-Pasta* criaPasta(char *nomePrograma, Local lado);
-char* geraNomeDaPasta(char *nomeBase, Local lado);
-Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Local ladoAtual);
+Pasta* criaPasta(char *nomePrograma, Pasta *mae);
+char* geraNomeDaPasta(Pasta *pastaMae, Local lado);
+Pasta* recriaArvore(FilaProgramas preOrdem, FilaProgramas inOrdem, Pasta *mae);
 FilaProgramas* criaFila(int qtd);
 void enfileirar(FilaProgramas *f, char *nomePrograma);
 char* desenfileirar(FilaProgramas *f);
@@ -48,6 +48,11 @@ void backupPreOrdem(Pasta *pasta, FilaProgramas *pre);
 void backupInOrdem(Pasta *pasta, FilaProgramas *in);
 Pasta* instalarPrograma(Pasta *raiz, char* nomeNovoPrograma, Pasta *pastaInstalada, Local ladoAtual, Pasta **pasta);
 void printProgramas(Pasta *pasta, char *caminho, int tam);
+Pasta* encontraMaximo(Pasta *arvore);
+Pasta* desinstalarPrograma(Pasta *no, Pasta *mae, char *nomeRemover, bool *removeuPrograma);
+void transfereProgramas(Pasta *p1, Pasta *p2);
+void desalocarArvore(Pasta* raiz);
+Local ladoDaPasta(Pasta *p);
 
 int main() {
 	int qtdProgramas;
@@ -66,7 +71,7 @@ int main() {
 		scanf("%s", nomePrograma);
 		enfileirar(filaPreOrdem, nomePrograma);
 	}
-	Pasta *raiz = recriaArvore(filaPreOrdem, filaInOrdem, RAIZ);
+	Pasta *raiz = recriaArvore(*filaPreOrdem, *filaInOrdem, NULL); //The pointer can't be passed, because we can't lose the first backup
 
 	printPreOrdem(raiz);
 	printf("\n");
@@ -79,7 +84,7 @@ int main() {
 		switch (op) {
 			case INSTALAR: {
 				Pasta **pastaInstalada = malloc(sizeof(Pasta*));
-				char *nomeNovoPrograma = malloc(TAM_NOME * sizeof(char));
+				char *nomeNovoPrograma = (char*) malloc(TAM_NOME * sizeof(char));
 				scanf("%s", nomeNovoPrograma);
 
 				raiz = instalarPrograma(raiz, nomeNovoPrograma, NULL, RAIZ, pastaInstalada);
@@ -94,8 +99,19 @@ int main() {
 
 				break;
 			}
+      case DESINSTALAR: {
+        char *nomeProgramaRemover = malloc(TAM_NOME * sizeof(char));
+				scanf("%s", nomeProgramaRemover);
+        bool *removeuPrograma = malloc(sizeof(bool));
+        *removeuPrograma = false;
+        raiz = desinstalarPrograma(raiz, NULL, nomeProgramaRemover, removeuPrograma);
+        if (*removeuPrograma == true)
+          printf("[UNINSTALL] Programa %s.exe desinstalado com sucesso\n", nomeProgramaRemover);
+        else
+          printf("[UNINSTALL] Nao foi encontrado no sistema nenhum programa com nome %s\n", nomeProgramaRemover);
+        break;
+      }
 			case BACKUP: {
-
 				free(filaPreOrdem);
 				free(filaInOrdem);
 
@@ -117,6 +133,12 @@ int main() {
 				printProgramas(raiz, caminho, 4);
 				break;
 			}
+      case RESTAURAR: {
+        desalocarArvore(raiz);
+        raiz = recriaArvore(*filaPreOrdem, *filaInOrdem, NULL);
+        printf("[RESTORE] Sistema restaurado para a versao do backup\n");
+        break;
+      }
 			default:
 		    	printf("Operação não cadastrada!\n");
 			break;
@@ -145,7 +167,20 @@ void backupPreOrdem(Pasta *pasta, FilaProgramas *pre) {
 		enfileirar(pre, pasta->nomePrograma);
 		backupInOrdem(pasta->esq, pre);
 		backupInOrdem(pasta->dir, pre);
-	}	
+	}
+}
+
+void desalocarArvore(Pasta* raiz) {
+  if (raiz == NULL)
+    return;
+  desalocarArvore(raiz->esq);
+  desalocarArvore(raiz->dir);
+  free(raiz->nome);
+  // free(raiz->nomePrograma);
+  raiz->nome = NULL;
+  raiz->nomePrograma = NULL;
+  raiz->esq = raiz->dir = NULL;
+  free(raiz);
 }
 
 /**
@@ -183,39 +218,63 @@ Pasta* instalarPrograma(Pasta *no, char* nomeNovoPrograma, Pasta *anterior, Loca
 		}
 	} else {
 		no = malloc(sizeof(Pasta));
-		no->nome = geraNomeDaPasta(anterior != NULL ? anterior->nomePrograma : NULL, ladoAtual);
+		no->nome = geraNomeDaPasta(anterior, ladoAtual);
 		no->nomePrograma = nomeNovoPrograma;
 		*pastaInstalada = no;
 	}
 	return no;
 }
 
+Pasta* desinstalarPrograma(Pasta *no, Pasta *mae, char *nomeRemover, bool *removeuPrograma) {
+  //TODO: FIX THE NAME OF FOLDER
+  if(no == NULL)
+    return NULL;
+  if(strcmp(no->nomePrograma, nomeRemover) == 0) {
+    *removeuPrograma = true; //Se entrou aqui, é porque o programa será removido, então já posso assumir que ele foi desinstaldo
+    if(no->esq == NULL && no->dir == NULL)
+      return NULL;
+    if (no->esq == NULL) {
+      no->dir->nome = geraNomeDaPasta(mae, ladoDoProgramaEmRelacaoDaPasta(mae, no->dir->nomePrograma));
+      return no->dir;
+    }
+    if (no->dir == NULL) {
+      no->esq->nome = geraNomeDaPasta(mae, ladoDoProgramaEmRelacaoDaPasta(mae, no->esq->nomePrograma));
+      return no->esq;
+    }
+    Pasta* extremaDireita = encontraMaximo(no->esq);
+    transfereProgramas(no, extremaDireita);
+  }
+  no->esq = desinstalarPrograma(no->esq, no, nomeRemover, removeuPrograma);
+  no->dir = desinstalarPrograma(no->dir, no, nomeRemover, removeuPrograma);
+  return no;
+}
+
 /**
  * Função para recriar uma árvore dado duas semestes geradoras
  */
-Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Local ladoAtual) {
-	if (filaVazia(preOrdem) || filaVazia(inOrdem))
+Pasta* recriaArvore(FilaProgramas preOrdem, FilaProgramas inOrdem, Pasta *mae) {
+	if (filaVazia(&preOrdem) || filaVazia(&inOrdem))
 		return NULL;
 
-	char* programaMae = desenfileirar(preOrdem);
-	FilaProgramas *arvoreEsqInOrdem = criaFila((inOrdem->fim - inOrdem->inicio) / 2);
-	char* nomePrograma = desenfileirar(inOrdem);
-	while (nomePrograma != NULL && strcmp(programaMae, nomePrograma) != 0) {
+	char* programaRaiz = desenfileirar(&preOrdem);
+	FilaProgramas *arvoreEsqInOrdem = criaFila((inOrdem.fim - inOrdem.inicio) / 2);
+	char* nomePrograma = desenfileirar(&inOrdem);
+	while (nomePrograma != NULL && strcmp(programaRaiz, nomePrograma) != 0) {
 		enfileirar(arvoreEsqInOrdem, nomePrograma);
-		nomePrograma = desenfileirar(inOrdem);
+		nomePrograma = desenfileirar(&inOrdem);
 	}
-	FilaProgramas *arvoreDirInOrdem = inOrdem; //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
-	Pasta *p = criaPasta(programaMae, ladoAtual);
-	p->esq = recriaArvore(preOrdem, arvoreEsqInOrdem, ESQUERDA);
-	p->dir = recriaArvore(preOrdem, arvoreDirInOrdem, DIREITA);
+	FilaProgramas arvoreDirInOrdem = inOrdem; //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
+	Pasta *p = criaPasta(programaRaiz, mae);
+	p->esq = recriaArvore(preOrdem, *arvoreEsqInOrdem, p);
+	p->dir = recriaArvore(preOrdem, arvoreDirInOrdem, p);
 	return p;
 }
 
 // INICIALIZERS
 
-Pasta* criaPasta(char *nomePrograma, Local lado) {
+Pasta* criaPasta(char *nomePrograma, Pasta *mae) {
 	Pasta *novaPasta = malloc(sizeof(Pasta));
-	char *nomePasta = geraNomeDaPasta(nomePrograma, lado);
+	char *nomePasta = geraNomeDaPasta(mae, ladoDoProgramaEmRelacaoDaPasta(mae, nomePrograma));
 	novaPasta->nome = nomePasta;
 	novaPasta->nomePrograma = nomePrograma;
 	novaPasta->dir = novaPasta->esq = NULL;
@@ -261,9 +320,11 @@ bool filaVazia(FilaProgramas *f) {
 }
 
 Local ladoDoProgramaEmRelacaoDaPasta(Pasta *no, char* nomePrograma) {
-	if(no->nomePrograma == NULL)
+	if (no == NULL)
 		return RAIZ;
-	if(strcmp(nomePrograma, no->nomePrograma) < 0)
+  if (no->nomePrograma == NULL)
+    return RAIZ;
+	if (strcmp(nomePrograma, no->nomePrograma) < 0)
 		return ESQUERDA;
 	else
 		return DIREITA;
@@ -285,18 +346,40 @@ void printInOrdem(Pasta *pasta) {
 	}
 }
 
-char* geraNomeDaPasta(char *nomeBase, Local lado) {
-	char *nome = malloc((TAM_NOME + 4) * sizeof(char));
+char* geraNomeDaPasta(Pasta *pastaMae, Local lado) {
+	char *nome = malloc((TAM_NOME) * sizeof(char));
 	nome[0] = '\0';
-	if(lado == RAIZ) {
-		strcat(nome, "raiz");
+	if(lado == RAIZ || pastaMae == NULL) {
+		strcpy(nome, "raiz");
 		return nome;
 	}
-	strcat(nome, nomeBase);
+	strcpy(nome, pastaMae->nomePrograma);
 	if(lado == DIREITA)
 		strcat(nome, "_dir");
 	else if(lado == ESQUERDA)
 		strcat(nome, "_esq");
 
 	return nome;
+}
+
+// Local ladoDaPasta(Pasta *p) {
+//   int ultimoIndice = strlen(p->nome) - 1;
+//   if (p->nome[ultimoIndice] == 'q')
+//     return ESQUERDA;
+//   else if (p->nome[ultimoIndice] == 'r')
+//     return DIREITA;
+//   return RAIZ;
+// }
+
+Pasta* encontraMaximo(Pasta *arvore) {
+  if(arvore->dir == NULL)
+    return arvore;
+  else
+    return encontraMaximo(arvore->dir);
+}
+
+void transfereProgramas(Pasta *p1, Pasta *p2) {
+  char* programaPasta2 = p2->nomePrograma;
+  p2->nomePrograma = p1->nomePrograma;
+  p1->nomePrograma = programaPasta2;
 }
