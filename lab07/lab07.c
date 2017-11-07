@@ -47,6 +47,7 @@ int contaPastas(Pasta *pasta);
 void backupPreOrdem(Pasta *pasta, FilaProgramas *pre);
 void backupInOrdem(Pasta *pasta, FilaProgramas *in);
 Pasta* instalarPrograma(Pasta *raiz, char* nomeNovoPrograma, Pasta *pastaInstalada, Local ladoAtual, Pasta **pasta);
+void printProgramas(Pasta *pasta, char *caminho);
 
 int main() {
 	int qtdProgramas;
@@ -110,6 +111,10 @@ int main() {
 				printf("[BACKUP] Configuracao atual do sistema salva com sucesso\n");
 				break;
 			}
+			case PRINT_PROGRAMAS: {
+				printProgramas(raiz, "C:");
+				break;
+			}
 			default:
 		    	printf("Operação não cadastrada!\n");
 			break;
@@ -119,6 +124,9 @@ int main() {
 	// Liberar árvore completa
 }
 
+/**
+ * Função que realiza o backup das semestes geradoras in-ordem
+ */
 void backupInOrdem(Pasta *pasta, FilaProgramas *in) {
 	if (pasta != NULL){
 		backupInOrdem(pasta->esq, in);
@@ -127,12 +135,25 @@ void backupInOrdem(Pasta *pasta, FilaProgramas *in) {
 	}
 }
 
+/**
+ * Função que realiza o backup das semestes geradoras pre-ordem
+ */
 void backupPreOrdem(Pasta *pasta, FilaProgramas *pre) {
 	if (pasta != NULL){
 		enfileirar(pre, pasta->nomePrograma);
 		backupInOrdem(pasta->esq, pre);
 		backupInOrdem(pasta->dir, pre);
 	}	
+}
+
+void printProgramas(Pasta *pasta, char *caminho) {
+	printf("a");
+	if (pasta != NULL) {
+		printf("a");
+		printProgramas(pasta->esq, strcat(strcat(caminho, "/"), pasta->nome));
+		printf("%s/%s.exe\n", caminho, pasta->nomePrograma);
+		printProgramas(pasta->dir, strcat(strcat(caminho, "/"), pasta->nome));
+	}
 }
 
 /**
@@ -150,9 +171,8 @@ Pasta* instalarPrograma(Pasta *no, char* nomeNovoPrograma, Pasta *anterior, Loca
 		no->nome = geraNomeDaPasta(anterior != NULL ? anterior->nomePrograma : NULL, ladoAtual);
 		no->nomePrograma = nomeNovoPrograma;
 		*pastaInstalada = no;
-		return no;
 	}
-		return no;
+	return no;
 }
 
 /**
