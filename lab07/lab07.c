@@ -47,6 +47,7 @@ int contaPastas(Pasta *pasta);
 void backupPreOrdem(Pasta *pasta, FilaProgramas *pre);
 void backupInOrdem(Pasta *pasta, FilaProgramas *in);
 Pasta* instalarPrograma(Pasta *raiz, char* nomeNovoPrograma, Pasta *pastaInstalada, Local ladoAtual, Pasta **pasta);
+void printProgramas(Pasta *pasta, char *caminho, int tam);
 Pasta* encontraMaximo(Pasta *arvore);
 Pasta* desinstalarPrograma(Pasta *no, Pasta *mae, char *nomeRemover, bool *removeuPrograma);
 void transfereProgramas(Pasta *p1, Pasta *p2);
@@ -126,6 +127,12 @@ int main() {
 				printf("[BACKUP] Configuracao atual do sistema salva com sucesso\n");
 				break;
 			}
+			case PRINT_PROGRAMAS: {
+				char *caminho = malloc(2 * sizeof(char));
+				strcpy(caminho, "C:");
+				printProgramas(raiz, caminho, 4);
+				break;
+			}
       case RESTAURAR: {
         desalocarArvore(raiz);
         raiz = recriaArvore(*filaPreOrdem, *filaInOrdem, NULL);
@@ -141,6 +148,9 @@ int main() {
 	// Liberar árvore completa
 }
 
+/**
+ * Função que realiza o backup das semestes geradoras in-ordem
+ */
 void backupInOrdem(Pasta *pasta, FilaProgramas *in) {
 	if (pasta != NULL){
 		backupInOrdem(pasta->esq, in);
@@ -149,6 +159,9 @@ void backupInOrdem(Pasta *pasta, FilaProgramas *in) {
 	}
 }
 
+/**
+ * Função que realiza o backup das semestes geradoras pre-ordem
+ */
 void backupPreOrdem(Pasta *pasta, FilaProgramas *pre) {
 	if (pasta != NULL){
 		enfileirar(pre, pasta->nomePrograma);
@@ -171,6 +184,29 @@ void desalocarArvore(Pasta* raiz) {
 }
 
 /**
+ * Função que printa o diretórios dos programas instalados
+ */
+void printProgramas(Pasta *pasta, char *caminho, int tam) {
+	if (pasta != NULL) {
+		// Cria uma variável auxiliar para ser um diretório a frente do caminho
+
+		caminho = realloc(caminho, (tam + strlen(pasta->nome) + 1) * sizeof(char));
+		char *aux = malloc((strlen(caminho) + strlen(pasta->nome) + 1) * sizeof(char));
+
+		strcpy(aux, caminho);
+		strcat(aux, "/");
+		strcat(aux, pasta->nome);
+
+		printProgramas(pasta->esq, aux, tam + strlen(pasta->nome) + 1);
+		printf("%s/%s.exe\n", aux, pasta->nomePrograma);
+		printProgramas(pasta->dir, aux, tam + strlen(pasta->nome) + 1);
+
+		// Retorna o diretório anterior para o auxiliar
+		strcpy(aux, caminho);
+	}
+}
+
+/**
  * Função para instalar um novo programa que retorna a raiz
  */
 Pasta* instalarPrograma(Pasta *no, char* nomeNovoPrograma, Pasta *anterior, Local ladoAtual, Pasta **pastaInstalada) {
@@ -186,7 +222,7 @@ Pasta* instalarPrograma(Pasta *no, char* nomeNovoPrograma, Pasta *anterior, Loca
 		no->nomePrograma = nomeNovoPrograma;
 		*pastaInstalada = no;
 	}
-		return no;
+	return no;
 }
 
 Pasta* desinstalarPrograma(Pasta *no, Pasta *mae, char *nomeRemover, bool *removeuPrograma) {
