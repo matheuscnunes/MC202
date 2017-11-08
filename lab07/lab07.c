@@ -131,7 +131,7 @@ int main() {
       case VELOCIDADE_RESPOSTA: {
         char *nomeProgramaPesquisa = malloc(TAM_NOME * sizeof(char));
         int tempo;
-				scanf("%s %d", nomeProgramaPesquisa, tempo);
+				scanf("%s %d", nomeProgramaPesquisa, &tempo);
         int tempoResposta = tempoDeExecucao(raiz, nomeProgramaPesquisa);
         int tempoRespostaSemRaiz = tempoResposta - 1;
         if (tempo > tempoRespostaSemRaiz)
@@ -219,16 +219,15 @@ void printProgramas(Pasta *pasta, char *caminho, int tam) {
 	if (pasta != NULL) {
 		// Cria uma variável auxiliar para ser um diretório a frente do caminho
 
-		caminho = realloc(caminho, (tam + strlen(pasta->nome) + 1) * sizeof(char));
 		char *aux = malloc((strlen(caminho) + strlen(pasta->nome) + 1) * sizeof(char));
 
 		strcpy(aux, caminho);
 		strcat(aux, "/");
 		strcat(aux, pasta->nome);
 
-		printProgramas(pasta->esq, aux, tam + strlen(pasta->nome) + 1);
+		printProgramas(pasta->esq, aux, (strlen(caminho) + strlen(pasta->nome) + 1));
 		printf("%s/%s.exe\n", aux, pasta->nomePrograma);
-		printProgramas(pasta->dir, aux, tam + strlen(pasta->nome) + 1);
+		printProgramas(pasta->dir, aux, (strlen(caminho) + strlen(pasta->nome) + 1));
 
 		// Retorna o diretório anterior para o auxiliar
 		strcpy(aux, caminho);
@@ -315,7 +314,7 @@ Pasta* balanceiaArvore(char** programasInOrdem, int tam, Pasta* mae) {
   int tamProgramasDir = tam - (indiceMediana + 1); // indiceMediana precisa ser incrementado, pois a mediana não entra nesse vetor
   char** programasDir = malloc(tamProgramasDir * sizeof(char*));
   for(int j = 0; j < tamProgramasDir; j++)
-    programasEsq[j] = programasInOrdem[j];
+    programasDir[j] = programasInOrdem[j + (indiceMediana + 1)];
 
   novaRaiz->esq = balanceiaArvore(programasEsq, tamProgramasEsq, novaRaiz);
   novaRaiz->dir = balanceiaArvore(programasDir, tamProgramasDir, novaRaiz);
