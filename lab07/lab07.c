@@ -300,7 +300,7 @@ Pasta* recriaArvore(FilaProgramas preOrdem, FilaProgramas inOrdem, Pasta *mae) {
 }
 
 Pasta* balanceiaArvore(char** programasInOrdem, int tam, Pasta* mae) {
-  if (tam == 0)
+  if (tam <= 0)
     return NULL;
   int indiceMediana = tam / 2; //Meidana é a nova raiz dessa chamada
   Pasta* novaRaiz = criaPasta(programasInOrdem[indiceMediana], mae);
