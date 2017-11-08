@@ -53,6 +53,7 @@ Pasta* desinstalarPrograma(Pasta *no, Pasta *mae, char *nomeRemover, bool *remov
 void transfereProgramas(Pasta *p1, Pasta *p2);
 void desalocarArvore(Pasta* raiz);
 Local ladoDaPasta(Pasta *p);
+void criaVetorBalanceamento(Pasta *pasta, char** vetor, int *index);
 
 int main() {
 	int qtdProgramas;
@@ -89,14 +90,12 @@ int main() {
 
 				raiz = instalarPrograma(raiz, nomeNovoPrograma, NULL, RAIZ, pastaInstalada);
 
-				printf("Adicionado com sucesso\n");
-				printf("Pasta: %s\n", (*pastaInstalada)->nome);
+				printf("[INSTALL] Programa %s.exe instalado com sucesso na pasta %s\n", nomeNovoPrograma, (*pastaInstalada)->nome);
 				printf("IN: ");
 				printInOrdem(raiz);
 				printf("\nPRE: ");
 				printPreOrdem(raiz);
 				printf("\n");
-
 				break;
 			}
       case DESINSTALAR: {
@@ -111,6 +110,20 @@ int main() {
           printf("[UNINSTALL] Nao foi encontrado no sistema nenhum programa com nome %s\n", nomeProgramaRemover);
         break;
       }
+      		case OTIMIZAR_RESPOSTA: {
+      			int numPastas = contaPastas(raiz);
+      			int *index = (int*) malloc(sizeof(int));
+      			*index = 0;
+      			char **vetor = (char**) malloc(numPastas * sizeof(char*));
+      			criaVetorBalanceamento(raiz, vetor, index);
+
+      			printf("Pastas: ");
+      			for (int i = 0; i < numPastas; i++) {
+      				printf("%s\n", vetor[i]);
+      			}
+
+      			break;
+      		}
 			case BACKUP: {
 				free(filaPreOrdem);
 				free(filaInOrdem);
@@ -343,6 +356,16 @@ void printInOrdem(Pasta *pasta) {
 		printInOrdem(pasta->esq);
 		printf("%s", pasta->nomePrograma);
 		printInOrdem(pasta->dir);
+	}
+}
+
+void criaVetorBalanceamento(Pasta *pasta, char** vetor, int *index) {
+	if (pasta != NULL) {
+		criaVetorBalanceamento(pasta->esq, vetor, index);
+		vetor[(*index)] = pasta->nomePrograma;
+		printf("index: %d - %s\n", (*index), vetor[(*index)]);
+		*index += 1;
+		criaVetorBalanceamento(pasta->dir, vetor, index);
 	}
 }
 
