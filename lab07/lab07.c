@@ -53,11 +53,9 @@ Pasta* desinstalarPrograma(Pasta *no, Pasta *mae, char *nomeRemover, bool *remov
 void transfereProgramas(Pasta *p1, Pasta *p2);
 void desalocarArvore(Pasta* raiz);
 Local ladoDaPasta(Pasta *p);
-<<<<<<< HEAD
+Pasta* balanceiaArvore(char** programasInOrdem, int tam, Pasta* mae);
 void criaVetorBalanceamento(Pasta *pasta, char** vetor, int *index);
-=======
 int tempoDeExecucao(Pasta *raiz, char* nomePrograma);
->>>>>>> 2f95ec3841fd577224a317064b8d0a48b40f4a98
 
 int main() {
 	int qtdProgramas;
@@ -114,20 +112,22 @@ int main() {
           printf("[UNINSTALL] Nao foi encontrado no sistema nenhum programa com nome %s\n", nomeProgramaRemover);
         break;
       }
-      		case OTIMIZAR_RESPOSTA: {
-      			int numPastas = contaPastas(raiz);
-      			int *index = (int*) malloc(sizeof(int));
-      			*index = 0;
-      			char **vetor = (char**) malloc(numPastas * sizeof(char*));
-      			criaVetorBalanceamento(raiz, vetor, index);
+      case OTIMIZAR_RESPOSTA: {
+      	int numPastas = contaPastas(raiz);
+      	int *index = malloc(sizeof(int));
+      	*index = 0;
+      	char **programasInOrdem = malloc(numPastas * sizeof(char*));
+      	criaVetorBalanceamento(raiz, programasInOrdem, index);
 
-      			printf("Pastas: ");
-      			for (int i = 0; i < numPastas; i++) {
-      				printf("%s\n", vetor[i]);
-      			}
-
-      			break;
-      		}
+      	printf("Programas: ");
+      	for (int i = 0; i < numPastas; i++) {
+      		printf("%s\n", programasInOrdem[i]);
+      	}
+        desalocarArvore(raiz);
+        raiz = balanceiaArvore(programasInOrdem, numPastas, NULL);
+        printf("[OPTIMIZE] O sistema de acesso a programas foi otimizado\n");
+      	break;
+      }
       case VELOCIDADE_RESPOSTA: {
         char *nomeProgramaPesquisa = malloc(TAM_NOME * sizeof(char));
         int tempo;
@@ -206,7 +206,6 @@ void desalocarArvore(Pasta* raiz) {
   desalocarArvore(raiz->esq);
   desalocarArvore(raiz->dir);
   free(raiz->nome);
-  // free(raiz->nomePrograma);
   raiz->nome = NULL;
   raiz->nomePrograma = NULL;
   raiz->esq = raiz->dir = NULL;
@@ -298,6 +297,28 @@ Pasta* recriaArvore(FilaProgramas preOrdem, FilaProgramas inOrdem, Pasta *mae) {
 	p->esq = recriaArvore(preOrdem, *arvoreEsqInOrdem, p);
 	p->dir = recriaArvore(preOrdem, arvoreDirInOrdem, p);
 	return p;
+}
+
+Pasta* balanceiaArvore(char** programasInOrdem, int tam, Pasta* mae) {
+  int indiceMediana = tam / 2; //Meidana é a nova raiz dessa chamada
+  Pasta* novaRaiz = criaPasta(*programasInOrdem[indiceMediana], mae);
+
+  //Cria a array que possui a arvore à esquerda de novaRaiz
+  int tamProgramasEsq = indiceMediana;
+  char** programasEsq = malloc(tamProgramasEsq * sizeof(char*));
+  for(int i = 0; i < tamProgramasEsq; i++)
+    *programasEsq[i] = *programasInOrdem[i];
+
+  //Cria a array que possui a arvore à direita de novaRaiz
+  int tamProgramasDir = tam - (indiceMediana + 1); // indiceMediana precisa ser incrementado, pois a mediana não entra nesse vetor
+  char** programasDir = malloc(tamProgramasDir * sizeof(char*));
+  for(int j = 0; j < tamProgramasDir; j++)
+    *programasEsq[j] = *programasInOrdem[j];
+
+  novaRaiz->esq = balanceiaArvore(programasEsq, tamProgramasEsq, novaRaiz);
+  novaRaiz->dir = balanceiaArvore(programasDir, tamProgramasDir, novaRaiz);
+  free(programasDir); free(programasEsq); //Aqui já posso liberar essas arrays
+  return novaRaiz;
 }
 
 // INICIALIZERS
