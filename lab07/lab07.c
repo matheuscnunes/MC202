@@ -301,19 +301,19 @@ Pasta* recriaArvore(FilaProgramas preOrdem, FilaProgramas inOrdem, Pasta *mae) {
 
 Pasta* balanceiaArvore(char** programasInOrdem, int tam, Pasta* mae) {
   int indiceMediana = tam / 2; //Meidana é a nova raiz dessa chamada
-  Pasta* novaRaiz = criaPasta(*programasInOrdem[indiceMediana], mae);
+  Pasta* novaRaiz = criaPasta(programasInOrdem[indiceMediana], mae);
 
   //Cria a array que possui a arvore à esquerda de novaRaiz
   int tamProgramasEsq = indiceMediana;
   char** programasEsq = malloc(tamProgramasEsq * sizeof(char*));
   for(int i = 0; i < tamProgramasEsq; i++)
-    *programasEsq[i] = *programasInOrdem[i];
+    programasEsq[i] = programasInOrdem[i];
 
   //Cria a array que possui a arvore à direita de novaRaiz
   int tamProgramasDir = tam - (indiceMediana + 1); // indiceMediana precisa ser incrementado, pois a mediana não entra nesse vetor
   char** programasDir = malloc(tamProgramasDir * sizeof(char*));
   for(int j = 0; j < tamProgramasDir; j++)
-    *programasEsq[j] = *programasInOrdem[j];
+    programasEsq[j] = programasInOrdem[j];
 
   novaRaiz->esq = balanceiaArvore(programasEsq, tamProgramasEsq, novaRaiz);
   novaRaiz->dir = balanceiaArvore(programasDir, tamProgramasDir, novaRaiz);
