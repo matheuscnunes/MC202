@@ -74,7 +74,13 @@ int main() {
 		scanf("%s", nomePrograma);
 		enfileirar(filaPreOrdem, nomePrograma);
 	}
-	Pasta *raiz = recriaArvore(filaPreOrdem, filaInOrdem, NULL); //The pointer can't be passed, because we can't lose the first backup
+
+	FilaProgramas *pre = malloc(sizeof(FilaProgramas));
+	FilaProgramas *in = malloc(sizeof(FilaProgramas));
+
+	*pre = *filaPreOrdem;
+	*in = *filaInOrdem;
+	Pasta *raiz = recriaArvore(pre, in, NULL); //The pointer can't be passed, because we can't lose the first backup
 
 	// printPreOrdem(raiz);
 	// printf("\n");
@@ -159,15 +165,15 @@ int main() {
 				filaPreOrdem = pre;
 				filaInOrdem = in;
 
-				printf("BACKUP PRE:");
-				for (int i = 0; i < pre->fim; i++)
-					printf(" %s", pre->programas[i]);
-				printf("\n");
+				// printf("BACKUP IN:");
+				// for (int i = 0; i < in->fim; i++)
+				// 	printf(" %s", in->programas[i]);
+				// printf("\n");
 
-				printf("BACKUP IN:");
-				for (int i = 0; i < in->fim; i++)
-					printf(" %s", in->programas[i]);
-				printf("\n");
+				// printf("BACKUP PRE:");
+				// for (int i = 0; i < pre->fim; i++)
+				// 	printf(" %s", pre->programas[i]);
+				// printf("\n");
 
 				printf("[BACKUP] Configuracao atual do sistema salva com sucesso\n");
 				break;
@@ -181,7 +187,12 @@ int main() {
 			}
 			case RESTAURAR: {
 				desalocarArvore(raiz);
-				raiz = recriaArvore(filaPreOrdem, filaInOrdem, NULL);
+				FilaProgramas *pre = malloc(sizeof(FilaProgramas));
+				FilaProgramas *in = malloc(sizeof(FilaProgramas));
+
+				*pre = *filaPreOrdem;
+				*in = *filaInOrdem;
+				raiz = recriaArvore(pre, in, NULL);
 				printf("[RESTORE] Sistema restaurado para a versao do backup\n");
 				break;
 			}
@@ -191,6 +202,7 @@ int main() {
 		}
 	}
 
+	desalocarArvore(raiz);
 	// Liberar árvore completa
 }
 
@@ -209,10 +221,10 @@ void backupInOrdem(Pasta *pasta, FilaProgramas *in) {
  * Função que realiza o backup das semestes geradoras pre-ordem
  */
 void backupPreOrdem(Pasta *pasta, FilaProgramas *pre) {
-	if (pasta != NULL){
+	if (pasta != NULL) {
 		enfileirar(pre, pasta->nomePrograma);
-		backupInOrdem(pasta->esq, pre);
-		backupInOrdem(pasta->dir, pre);
+		backupPreOrdem(pasta->esq, pre);
+		backupPreOrdem(pasta->dir, pre);
 	}
 }
 
