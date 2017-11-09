@@ -35,7 +35,7 @@ typedef struct FilaProgramas FilaProgramas;
 //Esqueletos
 Pasta* criaPasta(char *nomePrograma, Pasta *mae);
 char* geraNomeDaPasta(Pasta *pastaMae, Local lado);
-Pasta* recriaArvore(FilaProgramas preOrdem, FilaProgramas inOrdem, Pasta *mae);
+Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Pasta *mae);
 FilaProgramas* criaFila(int qtd);
 void enfileirar(FilaProgramas *f, char *nomePrograma);
 char* desenfileirar(FilaProgramas *f);
@@ -74,7 +74,7 @@ int main() {
 		scanf("%s", nomePrograma);
 		enfileirar(filaPreOrdem, nomePrograma);
 	}
-	Pasta *raiz = recriaArvore(*filaPreOrdem, *filaInOrdem, NULL); //The pointer can't be passed, because we can't lose the first backup
+	Pasta *raiz = recriaArvore(filaPreOrdem, filaInOrdem, NULL); //The pointer can't be passed, because we can't lose the first backup
 
 	printPreOrdem(raiz);
 	printf("\n");
@@ -134,11 +134,10 @@ int main() {
 				scanf("%s %d", nomeProgramaPesquisa, &tempo);
         int tempoResposta = tempoDeExecucao(raiz, nomeProgramaPesquisa);
         int tempoRespostaSemRaiz = tempoResposta - 1;
-        if (tempo > tempoRespostaSemRaiz)
+        if (tempoRespostaSemRaiz <= tempo)
           printf("[DELAY][OK] O acesso ao programa %s.exe foi concluido em %d segundos", nomeProgramaPesquisa, tempoRespostaSemRaiz);
         else
           printf("[DELAY][FAIL] O acesso ao programa %s.exe ultrapassou o limite de %d segundo", nomeProgramaPesquisa, tempo);
-        printf("%d\n", tempoResposta);
         break;
       }
 			case BACKUP: {
@@ -165,7 +164,7 @@ int main() {
 			}
       case RESTAURAR: {
         desalocarArvore(raiz);
-        raiz = recriaArvore(*filaPreOrdem, *filaInOrdem, NULL);
+        raiz = recriaArvore(filaPreOrdem, filaInOrdem, NULL);
         printf("[RESTORE] Sistema restaurado para a versao do backup\n");
         break;
       }
@@ -280,21 +279,22 @@ Pasta* desinstalarPrograma(Pasta *no, Pasta *mae, char *nomeRemover, bool *remov
 /**
  * Função para recriar uma árvore dado duas semestes geradoras
  */
-Pasta* recriaArvore(FilaProgramas preOrdem, FilaProgramas inOrdem, Pasta *mae) {
-	if (filaVazia(&preOrdem) || filaVazia(&inOrdem))
+Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Pasta *mae) {
+	if (filaVazia(preOrdem) || filaVazia(inOrdem))
 		return NULL;
 
-	char* programaRaiz = desenfileirar(&preOrdem);
-	FilaProgramas *arvoreEsqInOrdem = criaFila((inOrdem.fim - inOrdem.inicio) / 2);
-	char* nomePrograma = desenfileirar(&inOrdem);
+	char* programaRaiz = desenfileirar(preOrdem);
+	FilaProgramas *arvoreEsqInOrdem = criaFila((inOrdem->fim - inOrdem->inicio) / 2);
+	char* nomePrograma = desenfileirar(inOrdem);
 	while (nomePrograma != NULL && strcmp(programaRaiz, nomePrograma) != 0) {
 		enfileirar(arvoreEsqInOrdem, nomePrograma);
-		nomePrograma = desenfileirar(&inOrdem);
+		nomePrograma = desenfileirar(inOrdem);
 	}
-	FilaProgramas arvoreDirInOrdem = inOrdem; //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
+	FilaProgramas *arvoreDirInOrdem = inOrdem; //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
 	Pasta *p = criaPasta(programaRaiz, mae);
-	p->esq = recriaArvore(preOrdem, *arvoreEsqInOrdem, p);
+	p->esq = recriaArvore(preOrdem, arvoreEsqInOrdem, p);
 	p->dir = recriaArvore(preOrdem, arvoreDirInOrdem, p);
+  free(arvoreEsqInOrdem);
 	return p;
 }
 
