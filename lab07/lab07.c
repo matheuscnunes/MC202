@@ -76,10 +76,10 @@ int main() {
 	}
 	Pasta *raiz = recriaArvore(filaPreOrdem, filaInOrdem, NULL); //The pointer can't be passed, because we can't lose the first backup
 
-	printPreOrdem(raiz);
-	printf("\n");
-	printInOrdem(raiz);
-	printf("\n");
+	// printPreOrdem(raiz);
+	// printf("\n");
+	// printInOrdem(raiz);
+	// printf("\n");
 
 	int op;
 	// Le as operações do sistema
@@ -93,53 +93,58 @@ int main() {
 				raiz = instalarPrograma(raiz, nomeNovoPrograma, NULL, RAIZ, pastaInstalada);
 
 				printf("[INSTALL] Programa %s.exe instalado com sucesso na pasta %s\n", nomeNovoPrograma, (*pastaInstalada)->nome);
-				printf("IN: ");
-				printInOrdem(raiz);
-				printf("\nPRE: ");
-				printPreOrdem(raiz);
-				printf("\n");
+				// printf("IN: ");
+				// printInOrdem(raiz);
+				// printf("\nPRE: ");
+				// printPreOrdem(raiz);
+				// printf("\n");
 				break;
 			}
-      case DESINSTALAR: {
-        char *nomeProgramaRemover = malloc(TAM_NOME * sizeof(char));
+			case DESINSTALAR: {
+				char *nomeProgramaRemover = malloc(TAM_NOME * sizeof(char));
 				scanf("%s", nomeProgramaRemover);
-        bool *removeuPrograma = malloc(sizeof(bool));
-        *removeuPrograma = false;
-        raiz = desinstalarPrograma(raiz, NULL, nomeProgramaRemover, removeuPrograma);
-        if (*removeuPrograma == true)
-          printf("[UNINSTALL] Programa %s.exe desinstalado com sucesso\n", nomeProgramaRemover);
-        else
-          printf("[UNINSTALL] Nao foi encontrado no sistema nenhum programa com nome %s\n", nomeProgramaRemover);
-        break;
-      }
-      case OTIMIZAR_RESPOSTA: {
-      	int numPastas = contaPastas(raiz);
-      	int *index = malloc(sizeof(int));
-      	*index = 0;
-      	char **programasInOrdem = malloc(numPastas * sizeof(char*));
-      	criaVetorBalanceamento(raiz, programasInOrdem, index);
+				bool *removeuPrograma = malloc(sizeof(bool));
+				*removeuPrograma = false;
+				
+				raiz = desinstalarPrograma(raiz, NULL, nomeProgramaRemover, removeuPrograma);
+				if (*removeuPrograma == true)
+					printf("[UNINSTALL] Programa %s.exe desinstalado com sucesso\n", nomeProgramaRemover);
+				else
+					printf("[UNINSTALL] Nao foi encontrado no sistema nenhum programa com nome %s\n", nomeProgramaRemover);
 
-      	printf("Programas: ");
-      	for (int i = 0; i < numPastas; i++) {
-      		printf("%s\n", programasInOrdem[i]);
-      	}
-        desalocarArvore(raiz);
-        raiz = balanceiaArvore(programasInOrdem, numPastas, NULL);
-        printf("[OPTIMIZE] O sistema de acesso a programas foi otimizado\n");
-      	break;
-      }
-      case VELOCIDADE_RESPOSTA: {
-        char *nomeProgramaPesquisa = malloc(TAM_NOME * sizeof(char));
-        int tempo;
-				scanf("%s %d", nomeProgramaPesquisa, &tempo);
-        int tempoResposta = tempoDeExecucao(raiz, nomeProgramaPesquisa);
-        int tempoRespostaSemRaiz = tempoResposta - 1;
-        if (tempoRespostaSemRaiz <= tempo)
-          printf("[DELAY][OK] O acesso ao programa %s.exe foi concluido em %d segundos", nomeProgramaPesquisa, tempoRespostaSemRaiz);
-        else
-          printf("[DELAY][FAIL] O acesso ao programa %s.exe ultrapassou o limite de %d segundo", nomeProgramaPesquisa, tempo);
-        break;
-      }
+				break;
+			}
+			case OTIMIZAR_RESPOSTA: {
+				int numPastas = contaPastas(raiz);
+				int *index = malloc(sizeof(int));
+				*index = 0;
+				char **programasInOrdem = malloc(numPastas * sizeof(char*));
+				criaVetorBalanceamento(raiz, programasInOrdem, index);
+
+				// printf("Programas: ");
+				// for (int i = 0; i < numPastas; i++) {
+				// 	printf("%s\n", programasInOrdem[i]);
+				// }
+				desalocarArvore(raiz);
+				raiz = balanceiaArvore(programasInOrdem, numPastas, NULL);
+				printf("[OPTIMIZE] O sistema de acesso a programas foi otimizado\n");
+				break;
+			}
+			case VELOCIDADE_RESPOSTA: {
+				char *nomeProgramaPesquisa = malloc(TAM_NOME * sizeof(char));
+				int tempo;
+					scanf("%s %d", nomeProgramaPesquisa, &tempo);
+				int tempoResposta = tempoDeExecucao(raiz, nomeProgramaPesquisa);
+				int tempoRespostaSemRaiz = tempoResposta - 1;
+				if (tempoRespostaSemRaiz <= tempo)
+					printf("[DELAY][OK] O acesso ao programa %s.exe foi concluido em %d segundos\n", nomeProgramaPesquisa, tempoRespostaSemRaiz);
+				else
+					printf("[DELAY][FAIL] O acesso ao programa %s.exe ultrapassou o limite de %d segundo\n", nomeProgramaPesquisa, tempo);
+			break;
+			}
+
+			//TODO: VERIFICAR BACKUP OU RESTORE, ERRO OCORRE NO FIM DO TESTE 1
+			
 			case BACKUP: {
 				free(filaPreOrdem);
 				free(filaInOrdem);
@@ -149,25 +154,37 @@ int main() {
 				FilaProgramas *pre = criaFila(quantidadeDePastas);
 
 				backupInOrdem(raiz, in);
-				backupInOrdem(raiz, pre);
+				backupPreOrdem(raiz, pre);
 
 				filaPreOrdem = pre;
 				filaInOrdem = in;
+
+				printf("BACKUP PRE:");
+				for (int i = 0; i < pre->fim; i++)
+					printf(" %s", pre->programas[i]);
+				printf("\n");
+
+				printf("BACKUP IN:");
+				for (int i = 0; i < in->fim; i++)
+					printf(" %s", in->programas[i]);
+				printf("\n");
+
 				printf("[BACKUP] Configuracao atual do sistema salva com sucesso\n");
 				break;
 			}
 			case PRINT_PROGRAMAS: {
 				char *caminho = malloc(2 * sizeof(char));
 				strcpy(caminho, "C:");
+				printf("[PATHS]\n");
 				printProgramas(raiz, caminho, 4);
 				break;
 			}
-      case RESTAURAR: {
-        desalocarArvore(raiz);
-        raiz = recriaArvore(filaPreOrdem, filaInOrdem, NULL);
-        printf("[RESTORE] Sistema restaurado para a versao do backup\n");
-        break;
-      }
+			case RESTAURAR: {
+				desalocarArvore(raiz);
+				raiz = recriaArvore(filaPreOrdem, filaInOrdem, NULL);
+				printf("[RESTORE] Sistema restaurado para a versao do backup\n");
+				break;
+			}
 			default:
 		    	printf("Operação não cadastrada!\n");
 			break;
@@ -299,27 +316,28 @@ Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Pasta *mae)
 }
 
 Pasta* balanceiaArvore(char** programasInOrdem, int tam, Pasta* mae) {
-  if (tam <= 0)
-    return NULL;
-  int indiceMediana = tam / 2; //Meidana é a nova raiz dessa chamada
-  Pasta* novaRaiz = criaPasta(programasInOrdem[indiceMediana], mae);
+	if (tam <= 0)
+    	return NULL;
+  	int indiceMediana = (tam - 1) / 2; //Meidana é a nova raiz dessa chamada
+  	Pasta* novaRaiz = criaPasta(programasInOrdem[indiceMediana], mae);
 
-  //Cria a array que possui a arvore à esquerda de novaRaiz
-  int tamProgramasEsq = indiceMediana;
-  char** programasEsq = malloc(tamProgramasEsq * sizeof(char*));
-  for(int i = 0; i < tamProgramasEsq; i++)
-    programasEsq[i] = programasInOrdem[i];
+  	//Cria a array que possui a arvore à esquerda de novaRaiz
+  	int tamProgramasEsq = indiceMediana;
+  	char** programasEsq = malloc(tamProgramasEsq * sizeof(char*));
+  	for(int i = 0; i < tamProgramasEsq; i++)
+    	programasEsq[i] = programasInOrdem[i];
 
-  //Cria a array que possui a arvore à direita de novaRaiz
-  int tamProgramasDir = tam - (indiceMediana + 1); // indiceMediana precisa ser incrementado, pois a mediana não entra nesse vetor
-  char** programasDir = malloc(tamProgramasDir * sizeof(char*));
-  for(int j = 0; j < tamProgramasDir; j++)
-    programasDir[j] = programasInOrdem[j + (indiceMediana + 1)];
+  	//Cria a array que possui a arvore à direita de novaRaiz
+  	int tamProgramasDir = tam - (indiceMediana + 1); // indiceMediana precisa ser incrementado, pois a mediana não entra nesse vetor
+  	char** programasDir = malloc(tamProgramasDir * sizeof(char*));
+  	for(int j = 0; j < tamProgramasDir; j++)
+    	programasDir[j] = programasInOrdem[j + (indiceMediana + 1)];
 
-  novaRaiz->esq = balanceiaArvore(programasEsq, tamProgramasEsq, novaRaiz);
-  novaRaiz->dir = balanceiaArvore(programasDir, tamProgramasDir, novaRaiz);
-  free(programasDir); free(programasEsq); //Aqui já posso liberar essas arrays
-  return novaRaiz;
+  	novaRaiz->esq = balanceiaArvore(programasEsq, tamProgramasEsq, novaRaiz);
+  	novaRaiz->dir = balanceiaArvore(programasDir, tamProgramasDir, novaRaiz);
+  	free(programasDir); free(programasEsq); //Aqui já posso liberar essas arrays
+  	
+  	return novaRaiz;
 }
 
 // INICIALIZERS
@@ -353,13 +371,14 @@ int contaPastas(Pasta *pasta) {
 }
 
 int tempoDeExecucao(Pasta *raiz, char* nomePrograma) {
-  if (raiz == NULL)
-    return 0;
-  if (strcmp(raiz->nomePrograma, nomePrograma) > 0)
-    return tempoDeExecucao(raiz->esq, nomePrograma) + 1;
-  if (strcmp(raiz->nomePrograma, nomePrograma) < 0)
-    return tempoDeExecucao(raiz->dir, nomePrograma) + 1;
-  return 1;
+  	if (raiz == NULL)
+    	return 0;
+  	if (strcmp(raiz->nomePrograma, nomePrograma) > 0)
+	    return tempoDeExecucao(raiz->esq, nomePrograma) + 1;
+  	if (strcmp(raiz->nomePrograma, nomePrograma) < 0)
+    	return tempoDeExecucao(raiz->dir, nomePrograma) + 1;
+
+  	return 1;
 }
 
 void enfileirar(FilaProgramas *f, char *nomePrograma) {
@@ -384,8 +403,8 @@ bool filaVazia(FilaProgramas *f) {
 Local ladoDoProgramaEmRelacaoDaPasta(Pasta *no, char* nomePrograma) {
 	if (no == NULL)
 		return RAIZ;
-  if (no->nomePrograma == NULL)
-    return RAIZ;
+  	if (no->nomePrograma == NULL)
+    	return RAIZ;
 	if (strcmp(nomePrograma, no->nomePrograma) < 0)
 		return ESQUERDA;
 	else
@@ -412,7 +431,7 @@ void criaVetorBalanceamento(Pasta *pasta, char** vetor, int *index) {
 	if (pasta != NULL) {
 		criaVetorBalanceamento(pasta->esq, vetor, index);
 		vetor[(*index)] = pasta->nomePrograma;
-		printf("index: %d - %s\n", (*index), vetor[(*index)]);
+		// printf("index: %d - %s\n", (*index), vetor[(*index)]);
 		*index += 1;
 		criaVetorBalanceamento(pasta->dir, vetor, index);
 	}
@@ -434,15 +453,6 @@ char* geraNomeDaPasta(Pasta *pastaMae, Local lado) {
 	return nome;
 }
 
-// Local ladoDaPasta(Pasta *p) {
-//   int ultimoIndice = strlen(p->nome) - 1;
-//   if (p->nome[ultimoIndice] == 'q')
-//     return ESQUERDA;
-//   else if (p->nome[ultimoIndice] == 'r')
-//     return DIREITA;
-//   return RAIZ;
-// }
-
 Pasta* encontraMaximo(Pasta *arvore) {
   if(arvore->dir == NULL)
     return arvore;
@@ -451,7 +461,7 @@ Pasta* encontraMaximo(Pasta *arvore) {
 }
 
 void transfereProgramas(Pasta *p1, Pasta *p2) {
-  char* programaPasta2 = p2->nomePrograma;
-  p2->nomePrograma = p1->nomePrograma;
-  p1->nomePrograma = programaPasta2;
+  	char* programaPasta2 = p2->nomePrograma;
+  	p2->nomePrograma = p1->nomePrograma;
+  	p1->nomePrograma = programaPasta2;
 }
