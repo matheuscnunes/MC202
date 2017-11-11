@@ -126,13 +126,16 @@ int main() {
 				*index = 0;
 				char **programasInOrdem = malloc(numPastas * sizeof(char*));
 				criaVetorBalanceamento(raiz, programasInOrdem, index);
-
-				// printf("Programas: ");
-				// for (int i = 0; i < numPastas; i++) {
-				// 	printf("%s\n", programasInOrdem[i]);
+				// printf("Numero de programas (contaPastas): %d\n", numPastas);
+				// printf("Numero de programas (index): %d\n", *index);
+				// printf("Vetor balanceamento:");
+				// for (int i = 0; i < *index; i++) {
+				// 	printf(" %s", programasInOrdem[i]);
 				// }
+				// printf("\n");
+
 				desalocarArvore(raiz);
-				raiz = balanceiaArvore(programasInOrdem, numPastas, NULL);
+				raiz = balanceiaArvore(programasInOrdem, *index, NULL);
 				printf("[OPTIMIZE] O sistema de acesso a programas foi otimizado\n");
 				break;
 			}
@@ -152,10 +155,11 @@ int main() {
 			//TODO: VERIFICAR BACKUP OU RESTORE, ERRO OCORRE NO FIM DO TESTE 1
 			
 			case BACKUP: {
-				free(filaPreOrdem);
-				free(filaInOrdem);
-
+				free(filaPreOrdem);	free(filaInOrdem);
+				filaPreOrdem = filaInOrdem = NULL;
 				int quantidadeDePastas = contaPastas(raiz);
+
+				// printf("qtd pastas: %d\n", quantidadeDePastas);
 				FilaProgramas *in = criaFila(quantidadeDePastas);
 				FilaProgramas *pre = criaFila(quantidadeDePastas);
 
@@ -165,15 +169,15 @@ int main() {
 				filaPreOrdem = pre;
 				filaInOrdem = in;
 
-				// printf("BACKUP IN:");
-				// for (int i = 0; i < in->fim; i++)
-				// 	printf(" %s", in->programas[i]);
-				// printf("\n");
+				printf("BACKUP IN - ini: %d; fim: %d:", filaInOrdem->inicio, filaInOrdem->fim);
+				for (int i = 0; i < filaInOrdem->fim; i++)
+					printf(" %s", filaInOrdem->programas[i]);
+				printf("\n");
 
-				// printf("BACKUP PRE:");
-				// for (int i = 0; i < pre->fim; i++)
-				// 	printf(" %s", pre->programas[i]);
-				// printf("\n");
+				printf("BACKUP PRE: - ini: %d; fim: %d:", filaPreOrdem->inicio, filaPreOrdem->fim);
+				for (int i = 0; i < filaPreOrdem->fim; i++)
+					printf(" %s", filaPreOrdem->programas[i]);
+				printf("\n");
 
 				printf("[BACKUP] Configuracao atual do sistema salva com sucesso\n");
 				break;
@@ -192,6 +196,16 @@ int main() {
 
 				*pre = *filaPreOrdem;
 				*in = *filaInOrdem;
+				printf("BACKUP IN - ini: %d; fim: %d:", in->inicio, in->fim);
+				for (int i = 0; i < in->fim; i++)
+					printf(" %s", in->programas[i]);
+				printf("\n");
+
+				printf("BACKUP PRE: - ini: %d; fim: %d:", pre->inicio, pre->fim);
+				for (int i = 0; i < pre->fim; i++)
+					printf(" %s", pre->programas[i]);
+				printf("\n");
+
 				raiz = recriaArvore(pre, in, NULL);
 				printf("[RESTORE] Sistema restaurado para a versao do backup\n");
 				break;
@@ -202,7 +216,7 @@ int main() {
 		}
 	}
 
-	desalocarArvore(raiz);
+	// desalocarArvore(raiz);
 	// Liberar árvore completa
 }
 
@@ -238,6 +252,7 @@ void desalocarArvore(Pasta* raiz) {
   raiz->nomePrograma = NULL;
   raiz->esq = raiz->dir = NULL;
   free(raiz);
+  raiz = NULL;
 }
 
 /**
@@ -266,7 +281,7 @@ void printProgramas(Pasta *pasta, char *caminho, int tam) {
  * Função para instalar um novo programa que retorna a raiz
  */
 Pasta* instalarPrograma(Pasta *no, char* nomeNovoPrograma, Pasta *anterior, Local ladoAtual, Pasta **pastaInstalada) {
-	if (no != NULL) {
+	if (no != NULL && no->nomePrograma != NULL) {
 		if (strcmp(nomeNovoPrograma, no->nomePrograma) >= 0) {
 			no->dir = instalarPrograma(no->dir, nomeNovoPrograma, no, DIREITA, pastaInstalada);
 		} else {
@@ -282,7 +297,6 @@ Pasta* instalarPrograma(Pasta *no, char* nomeNovoPrograma, Pasta *anterior, Loca
 }
 
 Pasta* desinstalarPrograma(Pasta *no, Pasta *mae, char *nomeRemover, bool *removeuPrograma) {
-  //TODO: FIX THE NAME OF FOLDER
   if(no == NULL)
     return NULL;
   if(strcmp(no->nomePrograma, nomeRemover) == 0) {
@@ -312,25 +326,45 @@ Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Pasta *mae)
 	if (filaVazia(preOrdem) || filaVazia(inOrdem))
 		return NULL;
 
+	printf("entrou\n");
+	printf("BACKUP IN - ini: %d; fim: %d:", inOrdem->inicio, inOrdem->fim);
+	for (int i = 0; i < inOrdem->fim; i++)
+		printf(" %s", inOrdem->programas[i]);
+	printf("\n");
+
+	printf("BACKUP PRE: - ini: %d; fim: %d:", preOrdem->inicio, preOrdem->fim);
+	for (int i = 0; i < preOrdem->fim; i++)
+		printf(" %s", preOrdem->programas[i]);
+	printf("\n");
+
 	char* programaRaiz = desenfileirar(preOrdem);
 	FilaProgramas *arvoreEsqInOrdem = criaFila((inOrdem->fim - inOrdem->inicio) / 2);
 	char* nomePrograma = desenfileirar(inOrdem);
+	printf("pre-while\n");
 	while (nomePrograma != NULL && strcmp(programaRaiz, nomePrograma) != 0) {
+		printf("in-while\n");
 		enfileirar(arvoreEsqInOrdem, nomePrograma);
 		nomePrograma = desenfileirar(inOrdem);
 	}
-	FilaProgramas *arvoreDirInOrdem = inOrdem; //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
+
+	printf("pos-while\n");
+	// FilaProgramas *arvoreDirInOrdem = inOrdem; //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
 	Pasta *p = criaPasta(programaRaiz, mae);
+	printf("pos cria pasta\n");
 	p->esq = recriaArvore(preOrdem, arvoreEsqInOrdem, p);
-	p->dir = recriaArvore(preOrdem, arvoreDirInOrdem, p);
-  free(arvoreEsqInOrdem);
+	printf("pos chamada para esq\n");
+	p->dir = recriaArvore(preOrdem, inOrdem, p);
+	printf("pos chamada para dir\n");
+  // free(arvoreEsqInOrdem);
+
+  // arvoreEsqInOrdem = NULL;
 	return p;
 }
 
 Pasta* balanceiaArvore(char** programasInOrdem, int tam, Pasta* mae) {
 	if (tam <= 0)
     	return NULL;
-  	int indiceMediana = (tam - 1) / 2; //Meidana é a nova raiz dessa chamada
+  	int indiceMediana = (tam - 1) / 2; //Mediana é a nova raiz dessa chamada
   	Pasta* novaRaiz = criaPasta(programasInOrdem[indiceMediana], mae);
 
   	//Cria a array que possui a arvore à esquerda de novaRaiz
@@ -347,7 +381,7 @@ Pasta* balanceiaArvore(char** programasInOrdem, int tam, Pasta* mae) {
 
   	novaRaiz->esq = balanceiaArvore(programasEsq, tamProgramasEsq, novaRaiz);
   	novaRaiz->dir = balanceiaArvore(programasDir, tamProgramasDir, novaRaiz);
-  	free(programasDir); free(programasEsq); //Aqui já posso liberar essas arrays
+  	// free(programasDir); free(programasEsq); //Aqui já posso liberar essas arrays
   	
   	return novaRaiz;
 }
@@ -409,7 +443,7 @@ char* desenfileirar(FilaProgramas *f) {
 bool filaVazia(FilaProgramas *f) {
 	if (f == NULL)
 		return true;
-	return f->fim == f->inicio;
+	return f->fim <= f->inicio;
 }
 
 Local ladoDoProgramaEmRelacaoDaPasta(Pasta *no, char* nomePrograma) {
@@ -440,7 +474,7 @@ void printInOrdem(Pasta *pasta) {
 }
 
 void criaVetorBalanceamento(Pasta *pasta, char** vetor, int *index) {
-	if (pasta != NULL) {
+	if (pasta != NULL && pasta->nomePrograma != NULL) {
 		criaVetorBalanceamento(pasta->esq, vetor, index);
 		vetor[(*index)] = pasta->nomePrograma;
 		// printf("index: %d - %s\n", (*index), vetor[(*index)]);
