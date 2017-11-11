@@ -169,16 +169,6 @@ int main() {
 				filaPreOrdem = pre;
 				filaInOrdem = in;
 
-				printf("BACKUP IN - ini: %d; fim: %d:", filaInOrdem->inicio, filaInOrdem->fim);
-				for (int i = 0; i < filaInOrdem->fim; i++)
-					printf(" %s", filaInOrdem->programas[i]);
-				printf("\n");
-
-				printf("BACKUP PRE: - ini: %d; fim: %d:", filaPreOrdem->inicio, filaPreOrdem->fim);
-				for (int i = 0; i < filaPreOrdem->fim; i++)
-					printf(" %s", filaPreOrdem->programas[i]);
-				printf("\n");
-
 				printf("[BACKUP] Configuracao atual do sistema salva com sucesso\n");
 				break;
 			}
@@ -196,15 +186,6 @@ int main() {
 
 				*pre = *filaPreOrdem;
 				*in = *filaInOrdem;
-				printf("BACKUP IN - ini: %d; fim: %d:", in->inicio, in->fim);
-				for (int i = 0; i < in->fim; i++)
-					printf(" %s", in->programas[i]);
-				printf("\n");
-
-				printf("BACKUP PRE: - ini: %d; fim: %d:", pre->inicio, pre->fim);
-				for (int i = 0; i < pre->fim; i++)
-					printf(" %s", pre->programas[i]);
-				printf("\n");
 
 				raiz = recriaArvore(pre, in, NULL);
 				printf("[RESTORE] Sistema restaurado para a versao do backup\n");
@@ -326,38 +307,38 @@ Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Pasta *mae)
 	if (filaVazia(preOrdem) || filaVazia(inOrdem))
 		return NULL;
 
-	printf("entrou\n");
-	printf("BACKUP IN - ini: %d; fim: %d:", inOrdem->inicio, inOrdem->fim);
-	for (int i = 0; i < inOrdem->fim; i++)
-		printf(" %s", inOrdem->programas[i]);
-	printf("\n");
+	// printf("entrou\n");
+	// printf("BACKUP IN - ini: %d; fim: %d:", inOrdem->inicio, inOrdem->fim);
+	// for (int i = 0; i < inOrdem->fim; i++)
+	// 	printf(" %s", inOrdem->programas[i]);
+	// printf("\n");
 
-	printf("BACKUP PRE: - ini: %d; fim: %d:", preOrdem->inicio, preOrdem->fim);
-	for (int i = 0; i < preOrdem->fim; i++)
-		printf(" %s", preOrdem->programas[i]);
-	printf("\n");
+	// printf("BACKUP PRE: - ini: %d; fim: %d:", preOrdem->inicio, preOrdem->fim);
+	// for (int i = 0; i < preOrdem->fim; i++)
+	// 	printf(" %s", preOrdem->programas[i]);
+	// printf("\n");
 
 	char* programaRaiz = desenfileirar(preOrdem);
 	FilaProgramas *arvoreEsqInOrdem = criaFila((inOrdem->fim - inOrdem->inicio) / 2);
 	char* nomePrograma = desenfileirar(inOrdem);
-	printf("pre-while\n");
+	// printf("pre-while\n");
 	while (nomePrograma != NULL && strcmp(programaRaiz, nomePrograma) != 0) {
-		printf("in-while\n");
+		// printf("in-while\n");
 		enfileirar(arvoreEsqInOrdem, nomePrograma);
 		nomePrograma = desenfileirar(inOrdem);
 	}
 
-	printf("pos-while\n");
-	// FilaProgramas *arvoreDirInOrdem = inOrdem; //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
+	// printf("pos-while\n");
+	FilaProgramas *arvoreDirInOrdem = criaFila(inOrdem->fim - inOrdem->inicio); //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
+	*arvoreDirInOrdem = *inOrdem;
 	Pasta *p = criaPasta(programaRaiz, mae);
-	printf("pos cria pasta\n");
+	// printf("pos cria pasta\n");
 	p->esq = recriaArvore(preOrdem, arvoreEsqInOrdem, p);
-	printf("pos chamada para esq\n");
+	// printf("pos chamada para esq\n");
 	p->dir = recriaArvore(preOrdem, inOrdem, p);
-	printf("pos chamada para dir\n");
-  // free(arvoreEsqInOrdem);
-
-  // arvoreEsqInOrdem = NULL;
+	// printf("pos chamada para dir\n");
+	free(arvoreEsqInOrdem); arvoreEsqInOrdem = NULL;
+	free(arvoreDirInOrdem); arvoreDirInOrdem = NULL;
 	return p;
 }
 
