@@ -47,7 +47,7 @@ int contaPastas(Pasta *pasta);
 void backupPreOrdem(Pasta *pasta, FilaProgramas *pre);
 void backupInOrdem(Pasta *pasta, FilaProgramas *in);
 Pasta* instalarPrograma(Pasta *raiz, char* nomeNovoPrograma, Pasta *pastaInstalada, Local ladoAtual, Pasta **pasta);
-void printProgramas(Pasta *pasta, char *caminho, int tam);
+void printProgramas(Pasta *pasta, char *caminho);
 Pasta* encontraMaximo(Pasta *arvore);
 Pasta* desinstalarPrograma(Pasta *no, Pasta *mae, char *nomeRemover, bool *removeuPrograma);
 void transfereProgramas(Pasta *p1, Pasta *p2);
@@ -176,7 +176,7 @@ int main() {
 				char *caminho = malloc(2 * sizeof(char));
 				strcpy(caminho, "C:");
 				printf("[PATHS]\n");
-				printProgramas(raiz, caminho, 4);
+				printProgramas(raiz, caminho);
 				break;
 			}
 			case RESTAURAR: {
@@ -239,19 +239,21 @@ void desalocarArvore(Pasta* raiz) {
 /**
  * Função que printa o diretórios dos programas instalados
  */
-void printProgramas(Pasta *pasta, char *caminho, int tam) {
+void printProgramas(Pasta *pasta, char *caminho) {
 	if (pasta != NULL) {
 		// Cria uma variável auxiliar para ser um diretório a frente do caminho
-
-		char *aux = malloc((strlen(caminho) + strlen(pasta->nome) + 1) * sizeof(char));
-
+		int caminhoTamanho = strlen(caminho); 
+		char *aux = malloc((caminhoTamanho + strlen(pasta->nome) + 1) * sizeof(char));
+		if (caminho[caminhoTamanho] != 'r' && caminho[caminhoTamanho] != 'q' && caminho[caminhoTamanho] != 'z' && caminho[caminhoTamanho] != ':') {
+			caminho[caminhoTamanho] = '\0';
+		}
 		strcpy(aux, caminho);
 		strcat(aux, "/");
 		strcat(aux, pasta->nome);
 
-		printProgramas(pasta->esq, aux, (strlen(caminho) + strlen(pasta->nome) + 1));
+		printProgramas(pasta->esq, aux);
 		printf("%s/%s.exe\n", aux, pasta->nomePrograma);
-		printProgramas(pasta->dir, aux, (strlen(caminho) + strlen(pasta->nome) + 1));
+		printProgramas(pasta->dir, aux);
 
 		// Retorna o diretório anterior para o auxiliar
 		strcpy(aux, caminho);
@@ -321,7 +323,7 @@ Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Pasta *mae)
 	// printf("\n");
 
 	char* programaRaiz = desenfileirar(preOrdem);
-	FilaProgramas *arvoreEsqInOrdem = criaFila((inOrdem->fim - inOrdem->inicio) / 2);
+	FilaProgramas *arvoreEsqInOrdem = criaFila(inOrdem->fim);
 	char* nomePrograma = desenfileirar(inOrdem);
 	// printf("pre-while\n");
 	while (nomePrograma != NULL && strcmp(programaRaiz, nomePrograma) != 0) {
@@ -331,7 +333,7 @@ Pasta* recriaArvore(FilaProgramas *preOrdem, FilaProgramas *inOrdem, Pasta *mae)
 	}
 
 	// printf("pos-while\n");
-	FilaProgramas *arvoreDirInOrdem = criaFila(inOrdem->fim - inOrdem->inicio); //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
+	FilaProgramas *arvoreDirInOrdem = criaFila(inOrdem->fim); //O que sobrou na fila In-Ordem pertence ao lado direito da arvore
 	*arvoreDirInOrdem = *inOrdem;
 	Pasta *p = criaPasta(programaRaiz, mae);
 	// printf("pos cria pasta\n");
@@ -356,7 +358,7 @@ Pasta* balanceiaArvore(char** programasInOrdem, int tam, Pasta* mae) {
   	for(int i = 0; i < tamProgramasEsq; i++)
     	programasEsq[i] = programasInOrdem[i];
 
-  	//Cria a array que possui a arvore à direita de novaRaiz
+  	//Cria a arragefy que possui a arvore à direita de novaRaiz
   	int tamProgramasDir = tam - (indiceMediana + 1); // indiceMediana precisa ser incrementado, pois a mediana não entra nesse vetor
   	char** programasDir = malloc(tamProgramasDir * sizeof(char*));
   	for(int j = 0; j < tamProgramasDir; j++)
@@ -426,6 +428,7 @@ char* desenfileirar(FilaProgramas *f) {
 bool filaVazia(FilaProgramas *f) {
 	if (f == NULL)
 		return true;
+
 	return f->fim <= f->inicio;
 }
 
