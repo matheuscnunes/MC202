@@ -294,6 +294,8 @@ Pasta* desinstalarPrograma(Pasta *no, Pasta *mae, char *nomeRemover, bool *remov
     }
     Pasta* extremaDireita = encontraMaximo(no->esq);
     transfereProgramas(no, extremaDireita);
+    no->dir->nome = geraNomeDaPasta(no, DIREITA);
+    no->esq->nome = geraNomeDaPasta(no, ESQUERDA);
   }
   no->esq = desinstalarPrograma(no->esq, no, nomeRemover, removeuPrograma);
   no->dir = desinstalarPrograma(no->dir, no, nomeRemover, removeuPrograma);
