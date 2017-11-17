@@ -12,3 +12,5 @@ MANDAMENTOS:
 4: Desalocarás
 
 5: Submeterás sob a graça divina Susyana
+
+Parabenssssssssssss fritzz
